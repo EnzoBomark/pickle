@@ -1,0 +1,18 @@
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/dist
+
+# misc
+.DS_Store
+*.pem
+
+# local env files
+.env
+
+# local notes
+NOTES.md
