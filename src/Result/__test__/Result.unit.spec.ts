@@ -122,6 +122,22 @@ describe('Result', () => {
     });
   });
 
+  describe('mapErr', () => {
+    it('maps over an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.mapErr((error) => `new ${error}`);
+
+      expect(result.isErr && result.error).toEqual('new error1');
+    });
+
+    it('does not map over an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.mapErr((error) => `new ${error}`);
+
+      expect(result.isOk && result.value).toEqual(1);
+    });
+  });
+
   describe('Result.ok', () => {
     it('creates an Ok result', () => {
       const result = Result.ok('success');
