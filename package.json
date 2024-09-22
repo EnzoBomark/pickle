@@ -1,6 +1,7 @@
 {
   "name": "pickle",
   "version": "0.0.1",
+  "description": "Result<Ok, Err> and Option<Some>, implemented for TypeScript.",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
