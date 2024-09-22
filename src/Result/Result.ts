@@ -10,7 +10,7 @@ type ResultErrors<R> = {
   [K in keyof R]: R[K] extends Result<any, infer U> ? U : never;
 };
 
-interface IResult<Ok, Err> {
+interface ResultType<Ok, Err> {
   /**
    * Returns the contained `Ok` or `Err` value.
    *
@@ -18,8 +18,8 @@ interface IResult<Ok, Err> {
    * const x = Result.ok(10);
    * assert.equal(x.raw(), 10);
    *
-   * const x = Result.err(20);
-   * assert.equal(x.raw(), 20);
+   * const x = Result.err("NaN");
+   * assert.equal(x.raw(), "NaN");
    * ```
    */
   raw(): Ok | Err;
@@ -31,8 +31,8 @@ interface IResult<Ok, Err> {
    * const x = Result.ok(10);
    * assert.deepEqual(x.tuple(), [10, null]);
    *
-   * const x = Result.err(20);
-   * assert.deepEqual(x.tuple(), [null, 20]);
+   * const x = Result.err("NaN");
+   * assert.deepEqual(x.tuple(), [null, "NaN"]);
    * ```
    */
   tuple(): [Ok | null, Err | null];
@@ -44,7 +44,7 @@ interface IResult<Ok, Err> {
    * const x = Result.ok(10);
    * assert.equal(x.else(20), 10);
    *
-   * const x = Result.err(10);
+   * const x = Result.err("NaN");
    * assert.equal(x.else(20), 20);
    * ```
    */
@@ -54,10 +54,20 @@ interface IResult<Ok, Err> {
    * Returns the contained `Ok` value or the provided `Result`.
    *
    * ```typescript
-   * const x = Result.err(10);
+   * const x = Result.err("NaN");
    * const y = Result.ok(20);
    * const z = x.or(y);
    * assert.equal(z.raw(), 20);
+   *
+   * const x = Result.ok(10);
+   * const y = Result.err("NaN");
+   * const z = x.or(y);
+   * assert.equal(z.raw(), 10);
+   *
+   * const x = Result.err("NaN");
+   * const y = Result.err("NaN");
+   * const z = x.or(y);
+   * assert.equal(z.raw(), "NaN");
    * ```
    */
   or<OtherOk, OtherErr>(
@@ -71,6 +81,10 @@ interface IResult<Ok, Err> {
    * const x = Result.ok(10);
    * const y = x.map((value) => value * 2);
    * assert.equal(y.raw(), 20);
+   *
+   * const x = Result.err("NaN");
+   * const y = x.map((value) => value * 2);
+   * assert.equal(y.raw(), "NaN");
    * ```
    */
   map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, Err>;
@@ -81,8 +95,12 @@ interface IResult<Ok, Err> {
    *
    * ```typescript
    * const x = Result.ok(10);
-   * const y = x.flatMap((value) => value * 2);
+   * const y = x.flatMap((value) => Result.ok(2).map((value) => value * 2));
    * assert.equal(y.raw(), 20);
+   *
+   * const x = Result.err("NaN");
+   * const y = x.flatMap((value) => Result.ok(2).map((value) => value * 2));
+   * assert.equal(y.raw(), "NaN");
    * ```
    */
   flatMap<NewOk, NewErr>(
@@ -96,15 +114,19 @@ interface IResult<Ok, Err> {
    * Maps a `Result<Ok, Err>` to `Result<Ok, NewErr>` by applying a function to a contained `Err` value, leaving an `Ok` value untouched.
    *
    * ```typescript
-   * const x = Result.err(10);
+   * const x = Result.err("NaN");
    * const y = x.mapErr((value) => value * 2);
    * assert.equal(y.raw(), 20);
+   *
+   * const x = Result.ok(10);
+   * const y = x.mapErr((value) => value * 2);
+   * assert.equal(y.raw(), 10);
    * ```
    */
   mapErr<NewErr>(fn: (error: Err) => NewErr): Result<Ok, NewErr>;
 }
 
-class Ok<Ok, Err> implements IResult<Ok, Err> {
+class Ok<Ok, Err> implements ResultType<Ok, Err> {
   static readonly type = 'Ok';
   readonly type = Ok.type;
   readonly isOk = true;
@@ -154,7 +176,7 @@ class Ok<Ok, Err> implements IResult<Ok, Err> {
   }
 }
 
-class Err<Ok, Err> implements IResult<Ok, Err> {
+class Err<Ok, Err> implements ResultType<Ok, Err> {
   static readonly type = 'Err';
   readonly type = Err.type;
   readonly isOk = false;
@@ -211,7 +233,7 @@ class Err<Ok, Err> implements IResult<Ok, Err> {
  * const x = Result.ok(10);
  * assert(Result.is(x));
  *
- * const y = Result.err(20);
+ * const y = Result.err("NaN");
  * assert(Result.is(y));
  * ```
  */
@@ -235,8 +257,8 @@ function ok<Ok>(value: Ok): Result<Ok, never> {
  * Returns a `Result` with an `Err` value.
  *
  * ```typescript
- * const x = Result.err(10);
- * assert(x.raw() === 10);
+ * const x = Result.err("NaN");
+ * assert(x.raw() === "NaN");
  * ```
  */
 function err<Err>(error: Err): Result<never, Err> {
@@ -293,7 +315,7 @@ function all<Results extends Result<unknown, unknown>[]>(
  * Returns a `Result` with the first `Ok` value or all `Err` values.
  *
  * ```typescript
- * const x = Result.err(10);
+ * const x = Result.err("NaN");
  * const y = Result.ok(20);
  * const z = Result.any(x, y);
  * assert(z.raw() === 20);
@@ -320,18 +342,58 @@ function any<Results extends Result<unknown, unknown>[]>(
  * ```typescript
  * const x = await Result.async(Promise.resolve(Result.ok(10)));
  * assert(x.raw() === 10);
+ *
+ * const y = await Result.async(Promise.resolve(Result.err("NaN")));
+ * assert(y.raw() === "NaN");
+ * ```
+ *
+ * Can be used to chain promises:
+ * ```typescript
+ * const x = await Result.async(Promise.resolve(Result.ok(10)))
+ *   .flatMap((value) => Promise.resolve(Result.ok(value * 2)))
+ *   .flatMap((value) => Promise.resolve(Result.ok(value * 4)));
+ *   .flatMap((value) => Promise.resolve(Result.ok(value * 8)));
+ *
+ * assert(x.raw() === 10 * 2 * 4 * 8);
  * ```
  */
 function async<Ok, Err>(result: MaybePromise<Result<Ok, Err>>) {
+  /**
+   * Returns the contained `Ok` or `Err` value.
+   *
+   * ```typescript
+   * const x = await Result.async(Promise.resolve(Result.ok(10)).raw();
+   * assert(x === 10);
+   * ```
+   */
   const raw = async () => {
     const awaited = await result;
     return awaited.raw();
   };
 
+  /**
+   * Returns the contained `Ok` or `Err` value.
+   *
+   * ```typescript
+   * const x = await Result.async(Promise.resolve(Result.ok(10)).raw();
+   * assert(x === 10);
+   * ```
+   */
   const then = async (resolve: (result: Result<Ok, Err>) => void) => {
     resolve(await result);
   };
 
+  /**
+   * Maps a `Promise<Result<Ok, Err>>` to `Promise<Result<NewOk, Err>>` by applying a function to a contained `Ok` value, leaving an `Err` value untouched.
+   *
+   * ```typescript
+   * const x = await Result.async(Promise.resolve(Result.ok(10)))
+   *   .map((value) => value + 1)
+   *   .map((value) => `value: ${value}`);
+   *
+   * assert(x.raw() === "value: 11");
+   * ```
+   */
   const map = <NewOk>(fn: (value: Ok) => MaybePromise<NewOk>) => {
     const nextPromise = async () => {
       const awaited = await result;
@@ -342,6 +404,18 @@ function async<Ok, Err>(result: MaybePromise<Result<Ok, Err>>) {
     return async(nextPromise());
   };
 
+  /**
+   * Maps a `Promise<Result<Ok, Err>>` to `Promise<Result<NewOk, Err>>` by applying a function to a contained `Ok` value, flattening the `Err` value.
+   *
+   * ```typescript
+   * const x = await Result.async(Promise.resolve(Result.ok(10)))
+   *   .flatMap((value) => Promise.resolve(Result.ok(value * 2)))
+   *   .flatMap((value) => Promise.resolve(Result.ok(value * 4)));
+   *   .flatMap((value) => Promise.resolve(Result.ok(value * 8)));
+   *
+   * assert(x.raw() === 10 * 2 * 4 * 8);
+   * ```
+   */
   const flatMap = <NewOk, NewErr>(
     fn: (value: Ok) => Promise<Result<NewOk, NewErr>>
   ) => {

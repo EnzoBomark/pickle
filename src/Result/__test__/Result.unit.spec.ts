@@ -70,7 +70,7 @@ describe('Result', () => {
       expect(result.isOk && result.value).toBe(2);
     });
 
-    it('returns first result Err result', () => {
+    it('returns last result Err result', () => {
       const mayFail1: Result<number, 'error1'> = Result.err('error1');
       const mayFail2: Result<number, 'error2'> = Result.err('error2');
       const mayFail3: Result<number, 'error3'> = Result.err('error3');
