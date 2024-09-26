@@ -1,3 +1,4 @@
+import { inspect } from 'util';
 import { Result } from '../Result';
 
 export type Option<T> = Some<T> | None<T>;
@@ -10,73 +11,128 @@ type OptionTypes<R> = {
   [K in keyof R]: R[K] extends Option<infer T> ? T : never;
 };
 
-interface OptionType<Some> {
+interface IOptionType<Some> {
   /**
-   * Returns the contained `Some` or `FalsyValue` value.
+   * Returns the contained `Some` or `None` value.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * assert.equal(x.raw(), 10);
+   * const x = Option.some('foo').rawdog();
+   * assert.equal(x, 'foo');
+   * ```
    *
-   * const x = Option.none;
-   * assert.equal(x.raw(), null);
+   * ```typescript
+   * const x = Option.none.rawdog();
+   * assert.equal(x, null);
    * ```
    */
-  raw<T extends FalsyValue>(fallback: T): Some | T;
+  rawdog<Falsy extends FalsyValue>(fallback: Falsy): Some | Falsy; // Will probably be renamed to `unsafe` in the future
 
   /**
    * Returns the contained `Some` value or a provided fallback.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * assert.equal(x.else(20), 10);
+   * const x = Option.some('foo').someOr('bar');
+   * assert.equal(x, 'foo');
+   * ```
    *
-   * const x = Option.none;
-   * assert.equal(x.else(20), 20);
+   * ```typescript
+   * const x = Result.none.someOr('bar');
+   * assert.equal(x, 'bar');
    * ```
    */
-  else<T>(fallback: T): Some | T;
+  someOr<T>(fallback: T): Some | T;
+
+  /**
+   * Returns null value or a provided fallback.
+   *
+   * ```typescript
+   * const x = Option.some('foo').noneOr('bar');
+   * assert.equal(x, 'bar');
+   * ```
+   *
+   * ```typescript
+   * const x = Option.none.noneOr('bar');
+   * assert.equal(x, null);
+   * ```
+   */
+  noneOr<T>(fallback: T): null | T;
+
+  /**
+   * Returns the contained `Some` value or a provided fallback.
+   *
+   * ```typescript
+   * const x = Option.some('foo').someOrElse(() => 'bar');
+   * assert.equal(x, 'foo');
+   * ```
+   *
+   * ```typescript
+   * const x = Option.none.someOrElse(() => 'bar');
+   * assert.equal(x, 'bar');
+   * ```
+   */
+  someOrElse<T>(fn: () => T): Some | T;
+
+  /**
+   * Returns the contained `Some` value or a provided fallback.
+   *
+   * ```typescript
+   * const x = Option.some('foo').noneOrElse(() => 'bar');
+   * assert.equal(x, 'bar');
+   * ```
+   *
+   * ```typescript
+   * const x = Option.none.noneOrElse(() => 'bar');
+   * assert.equal(x, null);
+   * ```
+   */
+  noneOrElse<T>(fn: () => T): null | T;
+
+  /**
+   * Returns the contained `Some` value or throws an error.
+   *
+   * ```typescript
+   * const x = Option.some('foo').someOrThrow(new Error('no value'));
+   * assert.equal(x, 'foo');
+   * ```
+   *
+   * ```typescript
+   * Option.none.someOrThrow(new Error('no value')) // throws Error('no value')
+   * ```
+   */
+  someOrThrow<T extends Error>(error: T): Some;
+
+  /**
+   * Returns the contained `Some` value or throws an error.
+   *
+   * ```typescript
+   * Option.none.noneOrThrow(new Error('no value')) // throws Error('no value')
+   * ```
+   *
+   * ```typescript
+   * const x = Option.some('foo').noneOrThrow(new Error('no value'));
+   * assert.equal(x, 'foo');
+   * ```
+   */
+  noneOrThrow<T extends Error>(error: T): null;
 
   /**
    * Returns the contained `Some` value or the provided `Option`.
    *
    * ```typescript
    * const x = Option.none;
-   * const y = Option.some(20);
-   * const z = x.or(y);
-   * assert.equal(z.raw(), 20);
+   * const y = Option.some('bar');
+   * const z = x.or(y).rawdog();
+   * assert.equal(z, 'bar');
    *
-   * const x = Option.some(10);
+   * const x = Option.some('foo');
    * const y = Option.none;
-   * const z = x.or(y);
-   * assert.equal(z.raw(), 10);
+   * const z = x.or(y).rawdog();
+   * assert.equal(z, 'foo');
    *
    * const x = Option.none;
    * const y = Option.none;
-   * const z = x.or(y);
-   * assert.equal(z.raw(), null);
-   * ```
-   */
-  elseMap<T>(fn: () => T): Some | T;
-
-  /**
-   * Returns the contained `Some` value or the provided `Option`.
-   *
-   * ```typescript
-   * const x = Option.none;
-   * const y = Option.some(20);
-   * const z = x.or(y);
-   * assert.equal(z.raw(), 20);
-   *
-   * const x = Option.some(10);
-   * const y = Option.none;
-   * const z = x.or(y);
-   * assert.equal(z.raw(), 10);
-   *
-   * const x = Option.none;
-   * const y = Option.none;
-   * const z = x.or(y);
-   * assert.equal(z.raw(), null);
+   * const z = x.or(y).rawdog();
+   * assert.equal(z, null);
    * ```
    */
   or<OtherSome>(option: Option<OtherSome>): Option<Some | OtherSome>;
@@ -85,13 +141,15 @@ interface OptionType<Some> {
    * Maps a `Option<Some, None>` to `Option<NewSome, None>` by applying a function to a contained `Some` value, leaving an `None` value untouched.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * const y = x.map((value) => value * 2);
-   * assert.equal(y.raw(), 20);
-   *
-   * const x = Option.none;
-   * const y = x.map((value) => value * 2);
-   * assert.equal(y.raw(), null);
+   * const x = Option.some('foo').
+   *   .map((value) => value + 'bar');
+   *   .rawdog();
+   * assert.equal(x, 'foobar');
+   * ```
+   * const x = Option.none
+   *   .map((value) => value + 'bar')
+   *   .rawdog();
+   * assert.equal(x, null);
    * ```
    */
   map<NewSome>(fn: (some: Some) => NewSome): Option<NewSome>;
@@ -101,13 +159,17 @@ interface OptionType<Some> {
    * Maps a `Option<Some, None>` to `Option<NewSome, None>` by applying a function to a contained `Some` value, flattening the `None` value.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * const y = x.flatMap((value) => Option.some(2).map((value) => value * 2));
-   * assert.equal(y.raw(), 20);
+   * const x = Option.some('foo')
+   *   .flatMap((value) => Option.some(value + 'bar'))
+   *   .rawdog();
+   * assert.equal(x, 'foobar');
+   * ```
    *
-   * const x = Option.none;
-   * const y = x.flatMap((value) => Option.some(2).map((value) => value * 2));
-   * assert.equal(y.raw(), null);
+   * ```typescript
+   * const x = Option.none
+   *   .flatMap((value) => Option.some(value + 'bar'))
+   *   .rawdog();
+   * assert.equal(x, null);
    * ```
    */
   flatMap<NewSome>(fn: (some: Some) => Option<NewSome>): Option<NewSome>;
@@ -119,54 +181,61 @@ interface OptionType<Some> {
    * Returns an `Result` with a `Some` value or an `Err` value.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * const y = Option.toResult('NaN');
-   * assert.equal(Result.is(y), true);
-   * assert.equal(y.raw(), 10);
+   * const x = Option.some('foo').toResult('bar');
+   * assert.equal(Result.is(x), true);
+   * assert.equal(x.rawdog(), 'foo');
    *
-   * const x = Option.none;
-   * const y = Option.toResult('NaN');
-   * assert.equal(Result.is(y), true);
-   * assert.equal(y.raw(), 'NaN');
+   * const x = Option.none.toResult('bar');
+   * assert.equal(Result.is(x), true);
+   * assert.equal(x.rawdog(), 'bar');
    * ```
    * */
   toResult<Err>(error: Err): Result<Some, Err>;
 
   /**
-   * Returns an `Result` with a `Some` value or an `Err` value.
+   * Inspects the `Some` value.
    *
    * ```typescript
-   * const x = Option.some(10);
-   * const y = Option.toResultMap(() => 'NaN');
-   * assert.equal(Result.is(y), true);
-   * assert.equal(y.raw(), 10);
-   *
-   * const x = Option.none;
-   * const y = Option.toResultMap(() => 'NaN');
-   * assert.equal(Result.is(y), true);
-   * assert.equal(y.raw(), 'NaN');
+   * const x = Option.ok('foo');
+   * x.inspect((value) => console.log(value)); // logs 'foo'
    * ```
-   * */
-  toResultMap<Err>(fn: () => Err): Result<Some, Err>;
+   */
+  inspect(fn: (value: Some) => void): Option<Some>;
 }
 
-class Some<Some> implements OptionType<Some> {
+class Some<Some> implements IOptionType<Some> {
   static readonly type = 'Some';
   readonly type = Some.type;
   readonly isSome = true;
   readonly isNone = false;
   constructor(readonly value: Some) {}
 
-  raw<T extends FalsyValue>(fallback = null as T): Some {
+  rawdog<Falsy extends FalsyValue>(): Some {
     return this.value;
   }
 
-  else<T>(fallback: T): Some {
+  someOr<T>(fallback: T): Some | T {
     return this.value;
   }
 
-  elseMap<T>(fn: () => T): Some {
+  noneOr<T>(fallback: T): null | T {
+    return fallback;
+  }
+
+  someOrElse<T>(fn: () => T): Some | T {
     return this.value;
+  }
+
+  noneOrElse<T>(fn: () => T): null | T {
+    return fn();
+  }
+
+  someOrThrow<T extends Error>(error: T): Some {
+    return this.value;
+  }
+
+  noneOrThrow<T extends Error>(error: T): null {
+    throw error;
   }
 
   or<OtherSome>(option: Option<OtherSome>): Option<Some | OtherSome> {
@@ -193,28 +262,45 @@ class Some<Some> implements OptionType<Some> {
     return Result.ok(this.value);
   }
 
-  toResultMap<Err>(fn: () => Err): Result<Some, Err> {
-    return Result.ok(this.value);
+  inspect(fn: (value: Some) => void): Option<Some> {
+    fn(this.value);
+    return this;
   }
 }
 
-class None<Some> implements OptionType<Some> {
+class None<Some> implements IOptionType<Some> {
   static readonly type = 'None';
   readonly type = None.type;
   readonly isSome = false;
   readonly isNone = true;
   constructor() {}
 
-  raw<T extends FalsyValue>(fallback = null as T): T {
+  rawdog<T extends FalsyValue>(fallback = null as T): T {
     return fallback;
   }
 
-  else<Else>(fallback: Else): Else {
+  someOr<T>(fallback: T): Some | T {
     return fallback;
   }
 
-  elseMap<T>(fn: () => T): T {
+  noneOr<T>(fallback: T): null | T {
+    return null;
+  }
+
+  someOrElse<T>(fn: () => T): Some | T {
     return fn();
+  }
+
+  noneOrElse<T>(fn: () => T): null | T {
+    return null;
+  }
+
+  someOrThrow<T extends Error>(error: T): Some {
+    throw error;
+  }
+
+  noneOrThrow<T extends Error>(error: T): null {
+    return null;
   }
 
   or<OtherSome>(option: Option<OtherSome>): Option<Some | OtherSome> {
@@ -243,8 +329,8 @@ class None<Some> implements OptionType<Some> {
     return Result.err(error);
   }
 
-  toResultMap<Err>(fn: () => Err): Result<Some, Err> {
-    return Result.err(fn());
+  inspect(fn: (value: Some) => void): Option<Some> {
+    return this;
   }
 }
 
@@ -252,11 +338,13 @@ class None<Some> implements OptionType<Some> {
  * Returns `true` if `input` is an `Option`.
  *
  * ```typescript
- * const x = Option.some(10);
- * assert(Option.is(x));
+ * const x = Option.some("foo");
+ * assert.equal(Option.is(x) === true);
+ * ```
  *
- * const y = Option.none;
- * assert(Option.is(y));
+ * ```typescript
+ * const x = Option.none;
+ * assert.equal(Option.is(x) === true);
  * ```
  */
 function is<Some>(input: unknown): input is Option<Some> {
@@ -267,8 +355,8 @@ function is<Some>(input: unknown): input is Option<Some> {
  * Returns an `Option` with an `Some` value.
  *
  * ```typescript
- * const x = Option.some(10);
- * assert(x.raw() === 10);
+ * const x = Option.some("foo").rawdog();
+ * assert.equal(x === "foo");
  * ```
  */
 function some<Some>(value: Some): Option<Some> {
@@ -279,8 +367,8 @@ function some<Some>(value: Some): Option<Some> {
  * Returns an `Option` with an `None` value.
  *
  * ```typescript
- * const x = Option.none;
- * assert(x.raw() === null);
+ * const x = Option.none.rawdog();
+ * assert.equal(x === null);
  * ```
  */
 const none = new None() as Option<never>;
@@ -289,11 +377,13 @@ const none = new None() as Option<never>;
  * Returns an `Option` with the option of a promise.
  *
  * ```typescript
- * const x = Option.safe(Promise.resolve(10));
- * assert(x.raw() === 10);
+ * const x = Option.safe(Promise.resolve("foo")).rawdog();
+ * assert.equal(x === "foo");
+ * ```
  *
- * const y = Option.safe(Promise.reject(new Error('no value')));
- * assert(y.raw() instanceof None);
+ * ```typescript
+ * const x = Option.safe(Promise.reject(new Error('no value'))).rawdog();
+ * assert.equal(x instanceof None);
  * ```
  */
 async function safe<Some>(promise: Promise<Some>): Promise<Option<Some>> {
@@ -304,10 +394,10 @@ async function safe<Some>(promise: Promise<Some>): Promise<Option<Some>> {
  * Returns an `Option` with all `Some` values or the first `None` value.
  *
  * ```typescript
- * const x = Option.some(10);
- * const y = Option.some(20);
- * const z = Option.all(x, y);
- * assert(z.raw() === [10, 20]);
+ * const x = Option.some("foo");
+ * const y = Option.some("bar");
+ * const z = Option.all(x, y).rawdog();
+ * assert.deepEqual(z === ["foo", "bar"]);
  * ```
  */
 function all<Options extends Option<unknown>[]>(
@@ -330,9 +420,9 @@ function all<Options extends Option<unknown>[]>(
  *
  * ```typescript
  * const x = Option.none;
- * const y = Option.some(20);
- * const z = Option.any(x, y);
- * assert(z.raw() === 20);
+ * const y = Option.some("bar");
+ * const z = Option.any(x, y).rawdog();
+ * assert(z === "bar");
  * ```
  */
 function any<Options extends Option<unknown>[]>(
@@ -351,18 +441,20 @@ function any<Options extends Option<unknown>[]>(
  * Returns an `Option` with a value.
  *
  * ```typescript
- * const x = Option.from(10);
- * assert(x.raw() === 10);
+ * const x = Option.from("foo").rawdog();
+ * assert(x === "foo");
+ * ```
  *
- * const y = Option.from("");
- * assert(y.raw() === null);
+ * ```typescript
+ * const x = Option.from('').rawdog();
+ * assert(x === null);
  * ```
  */
 function from<T>(value: T): Option<T> {
   return !value ? Option.none : Option.some(value);
 }
 
-export const Option = {
+export const Option = Object.freeze({
   is,
   some,
   none,
@@ -370,4 +462,4 @@ export const Option = {
   all,
   any,
   from,
-};
+});

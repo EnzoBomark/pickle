@@ -1,42 +1,130 @@
+import { describe } from 'node:test';
 import { Option } from '../Option';
 
 describe('Option', () => {
-  describe('raw', () => {
+  describe('rawdog', () => {
     it('returns the value for an Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
-      const option = mayExist1.raw();
+      const option = mayExist1.rawdog();
 
       expect(option).toBe(1);
     });
 
     it('returns the null for an None option', () => {
       const mayExist1: Option<number> = Option.none;
-      const option = mayExist1.raw();
+      const option = mayExist1.rawdog();
 
       expect(option).toBe(null);
     });
 
     it('returns the falsy for an None option', () => {
       const mayExist1: Option<number> = Option.none;
-      const option = mayExist1.raw(0);
+      const option = mayExist1.rawdog(0);
 
       expect(option).toBe(0);
     });
   });
 
-  describe('else', () => {
+  describe('someOr', () => {
     it('returns the value for an Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
-      const option = mayExist1.else(0);
+      const option = mayExist1.someOr(0);
 
       expect(option).toBe(1);
     });
 
     it('returns the fallback for an None option', () => {
       const mayExist1: Option<number> = Option.none;
-      const option = mayExist1.else(0);
+      const option = mayExist1.someOr(0);
 
       expect(option).toBe(0);
+    });
+  });
+
+  describe('noneOr', () => {
+    it('returns the value for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.noneOr(0);
+
+      expect(option).toBe(0);
+    });
+
+    it('returns the fallback for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const option = mayExist1.noneOr(0);
+
+      expect(option).toBe(null);
+    });
+  });
+
+  describe('someOrElse', () => {
+    it('returns the value for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.someOrElse(() => 0);
+
+      expect(option).toBe(1);
+    });
+
+    it('returns the fallback for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const option = mayExist1.someOrElse(() => 0);
+
+      expect(option).toBe(0);
+    });
+  });
+
+  describe('noneOrElse', () => {
+    it('returns the value for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.noneOrElse(() => 0);
+
+      expect(option).toBe(0);
+    });
+
+    it('returns the fallback for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const option = mayExist1.noneOrElse(() => 0);
+
+      expect(option).toBe(null);
+    });
+  });
+
+  describe('someOrThrow', () => {
+    it('returns the value for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.someOrThrow(new Error('error'));
+
+      expect(option).toBe(1);
+    });
+
+    it('throws the error for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+
+      try {
+        mayExist1.someOrThrow(new Error('error'));
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+      }
+    });
+  });
+
+  describe('noneOrThrow', () => {
+    it('throws the error for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+
+      try {
+        mayExist1.noneOrThrow(new Error('error'));
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+      }
+    });
+
+    it('returns the null for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+
+      const option = mayExist1.noneOrThrow(new Error('error'));
+
+      expect(option).toBe(null);
     });
   });
 
@@ -108,6 +196,22 @@ describe('Option', () => {
       const option = mayFail1.flatMap(() => mayFail2);
 
       expect(option.isNone).toEqual(true);
+    });
+  });
+
+  describe('toResult', () => {
+    it('returns an Ok result for an Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const result = mayExist1.toResult('error');
+
+      expect(result.isOk && result.value).toBe(1);
+    });
+
+    it('returns an Err result for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const result = mayExist1.toResult('error');
+
+      expect(result.isErr && result.error).toBe('error');
     });
   });
 
