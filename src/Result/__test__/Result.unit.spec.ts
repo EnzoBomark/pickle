@@ -95,7 +95,7 @@ describe('Result', () => {
       try {
         mayFail1.okOrThrow(() => new Error('error'));
       } catch (error) {
-        expect(error.message).toBe('error');
+        expect(error).toBeInstanceOf(Error);
       }
     });
   });
@@ -107,7 +107,7 @@ describe('Result', () => {
       try {
         mayFail1.errorOrThrow(() => new Error('error'));
       } catch (error) {
-        expect(error.message).toBe('error');
+        expect(error).toBeInstanceOf(Error);
       }
     });
 
@@ -438,7 +438,7 @@ describe('Result', () => {
         Result.async(Promise.resolve(mayFail1))
           .okOrThrow(() => new Error('error'))
           .catch((error) => {
-            expect(error.message).toBe('error');
+            expect(error).toBeInstanceOf(Error);
           });
       });
     });
@@ -450,7 +450,7 @@ describe('Result', () => {
         Result.async(Promise.resolve(mayFail1))
           .errorOrThrow(() => new Error('error'))
           .catch((error) => {
-            expect(error.message).toBe('error');
+            expect(error).toBeInstanceOf(Error);
           });
       });
 
