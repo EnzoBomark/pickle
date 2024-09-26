@@ -1,4 +1,3 @@
-import { describe } from 'node:test';
 import { Option } from '../Option';
 
 describe('Option', () => {
@@ -196,6 +195,22 @@ describe('Option', () => {
       const option = mayFail1.flatMap(() => mayFail2);
 
       expect(option.isNone).toEqual(true);
+    });
+  });
+
+  describe('filter', () => {
+    it('returns a Some for an Some result that passes the predicate', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.filter((value) => value === 1);
+
+      expect(option.isSome && option.value).toBe(1);
+    });
+
+    it('returns a None for an Some result that does not pass the predicate', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const option = mayExist1.filter((value) => value === 2);
+
+      expect(option.isNone).toBe(true);
     });
   });
 

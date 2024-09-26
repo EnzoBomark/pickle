@@ -178,6 +178,24 @@ interface IOptionType<Some> {
   ): Promise<Option<NewSome>>;
 
   /**
+   * Returns an `Option` with a `Some` value or an `None` value.
+   *
+   * ```typescript
+   * const x = Option.some('foo')
+   *   .filter((value) => value === 'foo')
+   *   .rawdog();
+   * assert.equal(x, 'foo');
+   * ```
+   *
+   * ```typescript
+   * const x = Option.some('foo')
+   *   .filter((value) => value === 'bar')
+   *   .rawdog();
+   * assert.equal(x, null);
+   * */
+  filter(fn: (some: Some) => boolean): Option<Some>;
+
+  /**
    * Returns an `Result` with a `Some` value or an `Err` value.
    *
    * ```typescript
@@ -258,6 +276,10 @@ class Some<Some> implements IOptionType<Some> {
     return fn(this.value);
   }
 
+  filter(fn: (some: Some) => boolean): Option<Some> {
+    return fn(this.value) ? this : Option.none;
+  }
+
   toResult<Err>(error: Err): Result<Some, Err> {
     return Result.ok(this.value);
   }
@@ -322,6 +344,10 @@ class None<Some> implements IOptionType<Some> {
     fn: (some: Some) => MaybePromise<Option<NewSome>>
   ): MaybePromise<Option<NewSome>> {
     // @ts-expect-error - no value to map over
+    return this;
+  }
+
+  filter(fn: (some: Some) => boolean): Option<Some> {
     return this;
   }
 

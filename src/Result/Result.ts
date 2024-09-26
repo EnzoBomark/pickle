@@ -256,6 +256,22 @@ interface IResultType<Ok, Err> {
    *
    * ```typescript
    * const x = Result.ok('foo')
+   *   .filter((value) => value === 'foo')
+   * assert.equal(x.isSome, true);
+   * ```
+   *
+   * ```typescript
+   * const x = Result.ok('foo')
+   *   .filter((value) => value === 'bar')
+   * assert.equal(x.isNone, true);
+   */
+  filter(fn: (value: Ok) => boolean): Option<Ok>;
+
+  /**
+   * Converts the `Result` into an `Option`.
+   *
+   * ```typescript
+   * const x = Result.ok('foo')
    *   .toOption();
    * assert.equal(x.isSome, true);
    * ```
@@ -374,6 +390,10 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return this;
   }
 
+  filter(fn: (value: Ok) => boolean): Option<Ok> {
+    return fn(this.value) ? Option.some(this.value) : Option.none;
+  }
+
   toOption(): Option<Ok> {
     return Option.some(this.value);
   }
@@ -471,6 +491,10 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     fn: (error: Err) => MaybePromise<Result<NewOk, NewErr>>
   ): MaybePromise<Result<Ok | NewOk, NewErr>> {
     return fn(this.error);
+  }
+
+  filter(fn: (value: Ok) => boolean): Option<Ok> {
+    return Option.none;
   }
 
   toOption(): Option<Ok> {

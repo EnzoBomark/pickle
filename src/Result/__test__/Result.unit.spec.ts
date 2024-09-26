@@ -242,6 +242,22 @@ describe('Result', () => {
     });
   });
 
+  describe('filter', () => {
+    it('returns a Some for an Ok result that passes the predicate', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.filter((value) => value === 1);
+
+      expect(result.isSome && result.value).toBe(1);
+    });
+
+    it('returns a None for an Ok result that does not pass the predicate', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.filter((value) => value !== 1);
+
+      expect(result.isNone).toBe(true);
+    });
+  });
+
   describe('toOption', () => {
     it('returns a Some for an Ok result', () => {
       const mayFail1: Result<number, 'error1'> = Result.ok(1);
