@@ -34,16 +34,16 @@ interface IResultType<Ok, Err> {
    * Returns the contained `Ok` value or a provided fallback.
    *
    * ```typescript
-   * const x = Result.ok("foo").valueOr("bar");
+   * const x = Result.ok("foo").okOr("bar");
    * assert.equal(x, "foo");
    * ```
    *
    * ```typescript
-   * const x = Result.err("foo").valueOr("bar");
+   * const x = Result.err("foo").okOr("bar");
    * assert.equal(x, "bar");
    * ```
    */
-  valueOr<T>(fallback: T): Ok | T;
+  okOr<T>(fallback: T): Ok | T;
 
   /**
    * Returns the contained `Ok` value or a provided fallback.
@@ -64,16 +64,16 @@ interface IResultType<Ok, Err> {
    * Returns the contained `Ok` value or a provided fallback.
    *
    * ```typescript
-   * const x = Result.ok("foo").valueOrElse(() => "bar");
+   * const x = Result.ok("foo").okOrElse(() => "bar");
    * assert.equal(x, "foo");
    * ```
    *
    * ```typescript
-   * const x = Result.err("foo").valueOrElse(() => "bar");
+   * const x = Result.err("foo").okOrElse(() => "bar");
    * assert.equal(x, "bar");
    * ```
    */
-  valueOrElse<T>(fn: () => T): Ok | T;
+  okOrElse<T>(fn: () => T): Ok | T;
 
   /**
    * Returns the contained `Err` value or a provided fallback.
@@ -94,15 +94,15 @@ interface IResultType<Ok, Err> {
    * Returns the contained `Ok` value or a provided fallback.
    *
    * ```typescript
-   * const x = Result.ok("foo").valueOrThrow((err) => new Error(err));
+   * const x = Result.ok("foo").okOrThrow((err) => new Error(err));
    * assert.equal(x, "foo");
    * ```
    *
    * ```typescript
-   * const x = Result.err("foo").valueOrThrow((err) => new Error(err)); // throws "foo"
+   * const x = Result.err("foo").okOrThrow((err) => new Error(err)); // throws "foo"
    * ```
    */
-  valueOrThrow(fn: (error: Err) => Error): Ok;
+  okOrThrow(fn: (error: Err) => Error): Ok;
 
   /**
    * Returns the contained `Ok` value or a provided fallback.
@@ -299,7 +299,7 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return this.value;
   }
 
-  valueOr<T>(fallback: T): Ok | T {
+  okOr<T>(fallback: T): Ok | T {
     return this.value;
   }
 
@@ -307,7 +307,7 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return fallback;
   }
 
-  valueOrElse<T>(fn: () => T): Ok | T {
+  okOrElse<T>(fn: () => T): Ok | T {
     return this.value;
   }
 
@@ -315,7 +315,7 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return fn();
   }
 
-  valueOrThrow(fn: (error: Err) => Error): Ok {
+  okOrThrow(fn: (error: Err) => Error): Ok {
     return this.value;
   }
 
@@ -399,7 +399,7 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return this.error;
   }
 
-  valueOr<T>(fallback: T): Ok | T {
+  okOr<T>(fallback: T): Ok | T {
     return fallback;
   }
 
@@ -407,7 +407,7 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return this.error;
   }
 
-  valueOrElse<T>(fn: () => T): Ok | T {
+  okOrElse<T>(fn: () => T): Ok | T {
     return fn();
   }
 
@@ -415,7 +415,7 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return this.error;
   }
 
-  valueOrThrow(fn: (error: Err) => Error): Ok {
+  okOrThrow(fn: (error: Err) => Error): Ok {
     throw fn(this.error);
   }
 
@@ -520,17 +520,17 @@ interface IAsyncResultType<Ok, Err> {
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok("foo"))
-   *   .valueOr("bar")
+   *   .okOr("bar")
    *   .then((x) => assert(x === "foo"));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err("foo"))
-   *   .valueOr("bar")
+   *   .okOr("bar")
    *   .then((x) => assert(x === "bar"));
    * ```
    */
-  valueOr: <T>(fallback: T) => Promise<Ok | T>;
+  okOr: <T>(fallback: T) => Promise<Ok | T>;
 
   /**
    * Returns the contained `Err` value or the provided fallback.
@@ -554,17 +554,17 @@ interface IAsyncResultType<Ok, Err> {
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok("foo"))
-   *   .valueOrElse(() => "bar")
+   *   .okOrElse(() => "bar")
    *   .then((x) => assert(x === "foo"));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err("foo"))
-   *   .valueOrElse(() => "bar")
+   *   .okOrElse(() => "bar")
    *   .then((x) => assert(x === "bar"));
    * ```
    */
-  valueOrElse: <T>(fn: () => T) => Promise<Ok | T>;
+  okOrElse: <T>(fn: () => T) => Promise<Ok | T>;
 
   /**
    * Returns the contained `Err` value or a provided fallback.
@@ -588,17 +588,17 @@ interface IAsyncResultType<Ok, Err> {
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok("foo"))
-   *   .valueOrThrow(() => new Error("bar"))
+   *   .okOrThrow(() => new Error("bar"))
    *   .then((x) => assert(x === "foo"));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err("foo"))
-   *   .valueOrThrow(() => new Error("bar"))
+   *   .okOrThrow(() => new Error("bar"))
    *   .catch((x) => assert(x.message === "bar"));
    * ```
    */
-  valueOrThrow: (fn: (error: Err) => Error) => Promise<Ok>;
+  okOrThrow: (fn: (error: Err) => Error) => Promise<Ok>;
 
   /**
    * Returns the contained `Err` or throws the provided error.
@@ -770,9 +770,9 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return awaited.rawdog();
   }
 
-  async valueOr<T>(fallback: T) {
+  async okOr<T>(fallback: T) {
     const awaited = await this.result;
-    return awaited.valueOr(fallback);
+    return awaited.okOr(fallback);
   }
 
   async errorOr<T>(fallback: T) {
@@ -780,9 +780,9 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return awaited.errorOr(fallback);
   }
 
-  async valueOrElse<T>(fn: () => T) {
+  async okOrElse<T>(fn: () => T) {
     const awaited = await this.result;
-    return awaited.valueOrElse(fn);
+    return awaited.okOrElse(fn);
   }
 
   async errorOrElse<T>(fn: () => T) {
@@ -790,9 +790,9 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return awaited.errorOrElse(fn);
   }
 
-  async valueOrThrow(fn: (error: Err) => Error) {
+  async okOrThrow(fn: (error: Err) => Error) {
     const awaited = await this.result;
-    return awaited.valueOrThrow(fn);
+    return awaited.okOrThrow(fn);
   }
 
   async errorOrThrow(fn: (value: Ok) => Error) {
