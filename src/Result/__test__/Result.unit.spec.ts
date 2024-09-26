@@ -1,17 +1,119 @@
 import { Result } from '../Result';
 
 describe('Result', () => {
-  describe('raw', () => {
+  describe('rawdog', () => {
     it('returns the ok value', () => {
       const mayFail1: Result<number, 'error1'> = Result.ok(1);
-      const result = mayFail1.raw();
+      const result = mayFail1.rawdog();
 
       expect(result).toBe(1);
     });
 
     it('returns the error value', () => {
       const mayFail1: Result<number, 'error1'> = Result.err('error1');
-      const result = mayFail1.raw();
+      const result = mayFail1.rawdog();
+
+      expect(result).toBe('error1');
+    });
+  });
+
+  describe('valueOr', () => {
+    it('returns the value for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.valueOr(0);
+
+      expect(result).toBe(1);
+    });
+
+    it('returns the fallback for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.valueOr(0);
+
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('errorOr', () => {
+    it('returns the fallback for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.errorOr('error0');
+
+      expect(result).toBe('error0');
+    });
+
+    it('returns the error for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.errorOr('error0');
+
+      expect(result).toBe('error1');
+    });
+  });
+
+  describe('valueOrElse', () => {
+    it('returns the value for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.valueOrElse(() => 0);
+
+      expect(result).toBe(1);
+    });
+
+    it('returns the fallback for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.valueOrElse(() => 0);
+
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('errorOrElse', () => {
+    it('returns the fallback for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.errorOrElse(() => 'error0');
+
+      expect(result).toBe('error0');
+    });
+
+    it('returns the error for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.errorOrElse(() => 'error0');
+
+      expect(result).toBe('error1');
+    });
+  });
+
+  describe('valueOrThrow', () => {
+    it('returns the value for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const result = mayFail1.valueOrThrow(() => new Error('error'));
+
+      expect(result).toBe(1);
+    });
+
+    it('throws an error for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+
+      try {
+        mayFail1.valueOrThrow(() => new Error('error'));
+      } catch (error) {
+        expect(error.message).toBe('error');
+      }
+    });
+  });
+
+  describe('errorOrThrow', () => {
+    it('throws an error for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+
+      try {
+        mayFail1.errorOrThrow(() => new Error('error'));
+      } catch (error) {
+        expect(error.message).toBe('error');
+      }
+    });
+
+    it('returns the error for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const result = mayFail1.errorOrThrow(() => new Error('error'));
 
       expect(result).toBe('error1');
     });
@@ -32,22 +134,6 @@ describe('Result', () => {
 
       expect(ok).toBeNull();
       expect(err).toBe('error1');
-    });
-  });
-
-  describe('else', () => {
-    it('returns the value for an Ok result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.ok(1);
-      const result = mayFail1.else(0);
-
-      expect(result).toBe(1);
-    });
-
-    it('returns the fallback for an Err result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.err('error1');
-      const result = mayFail1.else(0);
-
-      expect(result).toBe(0);
     });
   });
 
@@ -138,6 +224,40 @@ describe('Result', () => {
     });
   });
 
+  describe('flatMapErr', () => {
+    it('maps over an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const mayFail2: Result<number, 'error2'> = Result.err('error2');
+      const result = mayFail1.flatMapErr(() => mayFail2);
+
+      expect(result.isErr && result.error).toEqual('error2');
+    });
+
+    it('does not map over an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const mayFail2: Result<number, 'error2'> = Result.err('error2');
+      const result = mayFail1.flatMapErr(() => mayFail2);
+
+      expect(result.isOk && result.value).toEqual(1);
+    });
+  });
+
+  describe('toOption', () => {
+    it('returns a Some for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const option = mayFail1.toOption();
+
+      expect(option.isSome && option.value).toBe(1);
+    });
+
+    it('returns a None for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const option = mayFail1.toOption();
+
+      expect(option.isNone).toBe(true);
+    });
+  });
+
   describe('Result.ok', () => {
     it('creates an Ok result', () => {
       const result = Result.ok('success');
@@ -207,15 +327,6 @@ describe('Result', () => {
   });
 
   describe('Result.async', () => {
-    describe('raw', () => {
-      it('returns the ok or err value', async () => {
-        const mayFail1: Result<number, 'error1'> = Result.ok(1);
-        const result = await Result.async(Promise.resolve(mayFail1)).raw();
-
-        expect(result).toEqual(1);
-      });
-    });
-
     describe('then', () => {
       it('can be awaited', async () => {
         const mayFail1: Result<number, 'error1'> = Result.ok(1);
@@ -223,6 +334,133 @@ describe('Result', () => {
         const result = await asyncResult;
 
         expect(result.isOk && result.value).toEqual(1);
+      });
+    });
+
+    describe('rawdog', () => {
+      it('returns the ok or err value', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(Promise.resolve(mayFail1)).rawdog();
+
+        expect(result).toEqual(1);
+      });
+    });
+
+    describe('valueOr', () => {
+      it('returns the value for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(Promise.resolve(mayFail1)).valueOr(0);
+
+        expect(result).toBe(1);
+      });
+
+      it('returns the fallback for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const result = await Result.async(Promise.resolve(mayFail1)).valueOr(0);
+
+        expect(result).toBe(0);
+      });
+    });
+
+    describe('errorOr', () => {
+      it('returns the fallback for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(Promise.resolve(mayFail1)).errorOr(
+          'error0'
+        );
+
+        expect(result).toBe('error0');
+      });
+
+      it('returns the error for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const result = await Result.async(Promise.resolve(mayFail1)).errorOr(
+          'error0'
+        );
+
+        expect(result).toBe('error1');
+      });
+    });
+
+    describe('valueOrElse', () => {
+      it('returns the value for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).valueOrElse(() => 0);
+
+        expect(result).toBe(1);
+      });
+
+      it('returns the fallback for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).valueOrElse(() => 0);
+
+        expect(result).toBe(0);
+      });
+    });
+
+    describe('errorOrElse', () => {
+      it('returns the fallback for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).errorOrElse(() => 'error0');
+
+        expect(result).toBe('error0');
+      });
+
+      it('returns the error for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).errorOrElse(() => 'error0');
+
+        expect(result).toBe('error1');
+      });
+    });
+
+    describe('valueOrThrow', () => {
+      it('returns the value for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).valueOrThrow(() => new Error('error'));
+
+        expect(result).toBe(1);
+      });
+
+      it('throws an error for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+
+        Result.async(Promise.resolve(mayFail1))
+          .valueOrThrow(() => new Error('error'))
+          .catch((error) => {
+            expect(error.message).toBe('error');
+          });
+      });
+    });
+
+    describe('errorOrThrow', () => {
+      it('throws an error for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+
+        Result.async(Promise.resolve(mayFail1))
+          .errorOrThrow(() => new Error('error'))
+          .catch((error) => {
+            expect(error.message).toBe('error');
+          });
+      });
+
+      it('returns the error for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const result = await Result.async(
+          Promise.resolve(mayFail1)
+        ).errorOrThrow(() => new Error('error'));
+
+        expect(result).toBe('error1');
       });
     });
 
@@ -273,6 +511,70 @@ describe('Result', () => {
           .flatMap(() => Promise.resolve(mayFail3));
 
         expect(result.isErr && result.error).toEqual('error2');
+      });
+    });
+
+    describe('mapErr', () => {
+      it('maps over an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+
+        const result = await Result.async(Promise.resolve(mayFail1)).mapErr(
+          (error) => `new ${error}`
+        );
+
+        expect(result.isErr && result.error).toEqual('new error1');
+      });
+
+      it('does not map over an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+
+        const result = await Result.async(Promise.resolve(mayFail1)).mapErr(
+          (error) => `new ${error}`
+        );
+
+        expect(result.isOk && result.value).toEqual(1);
+      });
+    });
+
+    describe('flatMapErr', () => {
+      it('maps over an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+        const mayFail2: Result<number, 'error2'> = Result.err('error2');
+
+        const result = await Result.async(Promise.resolve(mayFail1)).flatMapErr(
+          () => Promise.resolve(mayFail2)
+        );
+
+        expect(result.isErr && result.error).toEqual('error2');
+      });
+
+      it('does not map over an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+        const mayFail2: Result<number, 'error2'> = Result.err('error2');
+
+        const result = await Result.async(Promise.resolve(mayFail1)).flatMapErr(
+          () => Promise.resolve(mayFail2)
+        );
+
+        expect(result.isOk && result.value).toEqual(1);
+      });
+    });
+
+    describe('toOption', () => {
+      it('returns a Some for an Ok result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.ok(1);
+
+        const option = await Result.async(Promise.resolve(mayFail1)).toOption();
+
+        expect(option.isSome && option.value).toBe(1);
+      });
+
+      it('returns a None for an Err result', async () => {
+        const mayFail1: Result<number, 'error1'> = Result.err('error1');
+
+        const option = await Result.async(Promise.resolve(mayFail1)).toOption();
+
+        expect(option.isNone).toBe(true);
       });
     });
   });
