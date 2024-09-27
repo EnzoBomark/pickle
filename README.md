@@ -405,7 +405,7 @@ An Option represents either something, or nothing. If we hold a value of type `O
 import { Option } from 'pickle';
 
 function divide(x: number, by: number): Option<number> {
-  return by === 0 ? None : Some(x / by);
+  return by === 0 ? Option.none : Option.some(x / by);
 }
 
 const someOption = divide(100, 20);
