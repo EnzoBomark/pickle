@@ -19,16 +19,16 @@ interface IResultType<Ok, Err> {
    * Returns the contained `Ok` or `Err` value.
    *
    * ```typescript
-   * const x = Result.ok('foo').rawdog();
+   * const x = Result.ok('foo').unsafe();
    * assert.equal(x, 'foo');
    * ```
    *
    * ```typescript
-   * const x = Result.err('foo').rawdog();
+   * const x = Result.err('foo').unsafe();
    * assert.equal(x, 'foo');
    * ```
    */
-  rawdog(): Ok | Err; // Will probably be renamed to `unsafe` in the future
+  unsafe(): Ok | Err;
 
   /**
    * Returns the contained `Ok` value or a provided fallback.
@@ -102,7 +102,7 @@ interface IResultType<Ok, Err> {
    * const x = Result.err('foo').okOrThrow((err) => new Error(err)); // throws 'foo'
    * ```
    */
-  okOrThrow(fn: (error: Err) => Error): Ok;
+  okOrThrow(fn: (error: Err) => unknown): Ok;
 
   /**
    * Returns the contained `Ok` value or a provided fallback.
@@ -116,7 +116,7 @@ interface IResultType<Ok, Err> {
    * assert.equal(x, 'foo');
    * ```
    */
-  errorOrThrow(fn: (value: Ok) => Error): Err;
+  errorOrThrow(fn: (value: Ok) => unknown): Err;
 
   /**
    * Converts the `Result` into a tuple.
@@ -139,21 +139,21 @@ interface IResultType<Ok, Err> {
    * ```typescript
    * const x = Result.err('foo');
    * const y = Result.ok('bar');
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, 'bar');
    * ```
    *
    * ```typescript
    * const x = Result.ok('foo');
    * const y = Result.err('bar');
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, 'foo');
    * ```
    *
    * ```typescript
    * const x = Result.err('foo');
    * const y = Result.err('bar');
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, 'bar');
    * ```
    */
@@ -167,14 +167,14 @@ interface IResultType<Ok, Err> {
    * ```typescript
    * const x = Result.ok('foo')
    *   .map((value) => value + 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    *
    * ```typescript
    * const x = Result.err('foo')
    *   .map((value) => value + 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foo');
    * ```
    */
@@ -187,14 +187,14 @@ interface IResultType<Ok, Err> {
    * ```typescript
    * const x = Result.ok('foo')
    *   .flatMap((value) => Result.ok(value + 'bar'))
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    *
    * ```typescript
    * const x = Result.err('foo')
    *  .flatMap((value) => Result.ok(value + 'bar')
-   *  .rawdog();
+   *  .unsafe();
    * assert.equal(x, 'foo');
    * ```
    */
@@ -211,14 +211,14 @@ interface IResultType<Ok, Err> {
    * ```typescript
    * const x = Result.err('foo')
    *   .mapErr((value) => value + 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    *
    * ```typescript
    * const x = Result.ok('foo')
    *   .mapErr((value) => value + 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foo');
    * ```
    */
@@ -233,14 +233,14 @@ interface IResultType<Ok, Err> {
    * ```typescript
    * const x = Result.err('foo')
    *   .flatMapErr((value) => Result.err(value + 'bar'))
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    *
    * ```typescript
    * const x = Result.ok('foo')
    *   .flatMapErr((value) => Result.err(value + 'bar'))
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foo');
    * ```
    */
@@ -311,7 +311,7 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
   readonly isErr = false;
   constructor(readonly value: Ok) {}
 
-  rawdog(): Ok {
+  unsafe(): Ok {
     return this.value;
   }
 
@@ -331,11 +331,11 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return fn();
   }
 
-  okOrThrow(fn: (error: Err) => Error): Ok {
+  okOrThrow(fn: (error: Err) => unknown): Ok {
     return this.value;
   }
 
-  errorOrThrow(fn: (value: Ok) => Error): Err {
+  errorOrThrow(fn: (value: Ok) => unknown): Err {
     throw fn(this.value);
   }
 
@@ -415,7 +415,7 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
   readonly isErr = true;
   constructor(readonly error: Err) {}
 
-  rawdog(): Err {
+  unsafe(): Err {
     return this.error;
   }
 
@@ -435,11 +435,11 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return this.error;
   }
 
-  okOrThrow(fn: (error: Err) => Error): Ok {
+  okOrThrow(fn: (error: Err) => unknown): Ok {
     throw fn(this.error);
   }
 
-  errorOrThrow(fn: (value: Ok) => Error): Err {
+  errorOrThrow(fn: (value: Ok) => unknown): Err {
     return this.error;
   }
 
@@ -517,7 +517,7 @@ interface IAsyncResultType<Ok, Err> {
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
-   *   .then((result) => assert(Result.is(x) === true));
+   *   .then((result) => assert.equal(Result.is(x) === true));
    * ```
    */
   then: (resolve: (result: Result<Ok, Err>) => void) => void;
@@ -527,17 +527,17 @@ interface IAsyncResultType<Ok, Err> {
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
-   *   .rawdog()
-   *   .then((x) => assert(x === 'foo'))
+   *   .unsafe()
+   *   .then((x) => assert.equal(x === 'foo'))
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('bar'))
-   *   .rawdog()
-   *   .then((x) => assert(x === 'bar'))
+   *   .unsafe()
+   *   .then((x) => assert.equal(x === 'bar'))
    * ```
    */
-  rawdog: () => Promise<Ok | Err>;
+  unsafe: () => Promise<Ok | Err>;
 
   /**
    * Returns the contained `Ok` value or the provided fallback.
@@ -545,13 +545,13 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .okOr('bar')
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .okOr('bar')
-   *   .then((x) => assert(x === 'bar'));
+   *   .then((x) => assert.equal(x === 'bar'));
    * ```
    */
   okOr: <T>(fallback: T) => Promise<Ok | T>;
@@ -562,13 +562,13 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .errorOr('bar')
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .errorOr('bar')
-   *   .then((x) => assert(x === 'bar'));
+   *   .then((x) => assert.equal(x === 'bar'));
    * ```
    */
   errorOr: <T>(fallback: T) => Promise<Err | T>;
@@ -579,13 +579,13 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .okOrElse(() => 'bar')
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .okOrElse(() => 'bar')
-   *   .then((x) => assert(x === 'bar'));
+   *   .then((x) => assert.equal(x === 'bar'));
    * ```
    */
   okOrElse: <T>(fn: () => T) => Promise<Ok | T>;
@@ -596,13 +596,13 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .errorOrElse(() => 'bar')
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .errorOrElse(() => 'bar')
-   *   .then((x) => assert(x === 'bar'));
+   *   .then((x) => assert.equal(x === 'bar'));
    * ```
    */
   errorOrElse: <T>(fn: () => T) => Promise<Err | T>;
@@ -613,16 +613,16 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .okOrThrow(() => new Error('bar'))
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .okOrThrow(() => new Error('bar'))
-   *   .catch((x) => assert(x.message === 'bar'));
+   *   .catch((x) => assert.equal(x.message === 'bar'));
    * ```
    */
-  okOrThrow: (fn: (error: Err) => Error) => Promise<Ok>;
+  okOrThrow: (fn: (error: Err) => unknown) => Promise<Ok>;
 
   /**
    * Returns the contained `Err` or throws the provided error.
@@ -630,16 +630,16 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .errorOrThrow(() => new Error('bar'))
-   *   .then((x) => assert(x === 'foo'));
+   *   .then((x) => assert.equal(x === 'foo'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .errorOrThrow(() => new Error('bar'))
-   *   .catch((x) => assert(x.message === 'bar'));
+   *   .catch((x) => assert.equal(x.message === 'bar'));
    * ```
    */
-  errorOrThrow: (fn: (value: Ok) => Error) => Promise<Err>;
+  errorOrThrow: (fn: (value: Ok) => unknown) => Promise<Err>;
 
   /**
    * Converts the `Result` into a tuple.
@@ -665,14 +665,14 @@ interface IAsyncResultType<Ok, Err> {
    * Result.async(Promise.resolve(Result.ok('foo')))
    *   .map((value) => value + 'bar')
    *   .map((value) => `value: ${value}`)
-   *   .then((x) => assert(x.rawdog() === 'value: foobar'));
+   *   .then((x) => assert.equal(x.unsafe() === 'value: foobar'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo')))
    *   .map((value) => value + 'bar')
    *   .map((value) => `value: ${value}`)
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   map: <NewOk>(
@@ -686,14 +686,14 @@ interface IAsyncResultType<Ok, Err> {
    * Result.async(Promise.resolve(Result.ok('foo')))
    *   .flatMap((value) => Promise.resolve(Result.ok(value + 'bar')))
    *   .flatMap((value) => Promise.resolve(Result.ok(`value: ${value}`))
-   *   .then((x) => assert(x.rawdog() === 'value: foobar'));
+   *   .then((x) => assert.equal(x.unsafe() === 'value: foobar'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo')))
    *   .flatMap((value) => Promise.resolve(Result.ok(value + 'bar')))
    *   .flatMap((value) => Promise.resolve(Result.ok(`value: ${value}`))
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   flatMap: <NewOk, NewErr>(
@@ -707,14 +707,14 @@ interface IAsyncResultType<Ok, Err> {
    * Result.async(Promise.resolve(Result.err('foo')))
    *   .mapErr((value) => value + 'bar')
    *   .mapErr((value) => `value: ${value}`)
-   *   .then((x) => assert(x.rawdog() === 'value: foobar'));
+   *   .then((x) => assert.equal(x.unsafe() === 'value: foobar'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo')))
    *   .mapErr((value) => value + 'bar')
    *   .mapErr((value) => `value: ${value}`)
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   mapErr: <NewErr>(
@@ -728,14 +728,14 @@ interface IAsyncResultType<Ok, Err> {
    * Result.async(Promise.resolve(Result.err('foo')))
    *   .flatMapErr((value) => Promise.resolve(Result.err(value + 'bar')))
    *   .flatMapErr((value) => Promise.resolve(Result.err(`value: ${value}`))
-   *   .then((x) => assert(x.rawdog() === 'value: foobar'));
+   *   .then((x) => assert.equal(x.unsafe() === 'value: foobar'));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo')))
    *   .flatMapErr((value) => Promise.resolve(Result.err(value + 'bar')))
    *   .flatMapErr((value) => Promise.resolve(Result.err(`value: ${value}`))
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   flatMapErr: <NewOk, NewErr>(
@@ -748,13 +748,13 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .toOption()
-   *   .then((x) => assert(x.isSome === true));
+   *   .then((x) => assert.equal(x.isSome === true));
    * ```
    *
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .toOption()
-   *   .then((x) => assert(x.isNone === true));
+   *   .then((x) => assert.equal(x.isNone === true));
    * ```
    */
   toOption: () => Promise<Option<Ok>>;
@@ -765,7 +765,7 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.ok('foo'))
    *   .inspect((value) => console.log(value))
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   inspect: (fn: (value: Ok) => void) => AsyncResult<Ok, Err>;
@@ -776,7 +776,7 @@ interface IAsyncResultType<Ok, Err> {
    * ```typescript
    * Result.async(Promise.resolve(Result.err('foo'))
    *   .inspectErr((error) => console.error(error))
-   *   .then((x) => assert(x.rawdog() === 'foo'));
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
    * ```
    */
   inspectErr: (fn: (error: Err) => void) => AsyncResult<Ok, Err>;
@@ -789,9 +789,9 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     resolve(await this.result);
   }
 
-  async rawdog() {
+  async unsafe() {
     const awaited = await this.result;
-    return awaited.rawdog();
+    return awaited.unsafe();
   }
 
   async okOr<T>(fallback: T) {
@@ -814,12 +814,12 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return awaited.errorOrElse(fn);
   }
 
-  async okOrThrow(fn: (error: Err) => Error) {
+  async okOrThrow(fn: (error: Err) => unknown) {
     const awaited = await this.result;
     return awaited.okOrThrow(fn);
   }
 
-  async errorOrThrow(fn: (value: Ok) => Error) {
+  async errorOrThrow(fn: (value: Ok) => unknown) {
     const awaited = await this.result;
     return awaited.errorOrThrow(fn);
   }
@@ -892,12 +892,12 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
  *
  * ```typescript
  * const x = Result.ok('foo');
- * assert(Result.is(x) === true);
+ * assert.equal(Result.is(x) === true);
  * ```
  *
  * ```typescript
  * const x = Result.err('bar');
- * assert(Result.is(x) === true);
+ * assert.equal(Result.is(x) === true);
  * ```
  */
 function is<Ok, Err>(input: unknown): input is Result<Ok, Err> {
@@ -909,12 +909,12 @@ function is<Ok, Err>(input: unknown): input is Result<Ok, Err> {
  *
  * ```typescript
  * const x = Result.ok('foo');
- * assert(x.rawdog() === 'foo');
+ * assert.equal(x.unsafe() === 'foo');
  * ```
  *
  * ```typescript
  * const x = Result.ok();
- * assert(x.rawdog() === null);
+ * assert.equal(x.unsafe() === null);
  * ```
  */
 function ok(): Result<null, never>;
@@ -928,7 +928,7 @@ function ok<Ok>(value?: Ok): Result<Ok | null, never> {
  *
  * ```typescript
  * const x = Result.err('foo');
- * assert(x.rawdog() === 'foo');
+ * assert.equal(x.unsafe() === 'foo');
  * ```
  */
 function err<Err>(error: Err): Result<never, Err> {
@@ -940,12 +940,12 @@ function err<Err>(error: Err): Result<never, Err> {
  *
  * ```typescript
  * const x = Result.safe(Promise.resolve('foo'));
- * assert(x.rawdog() === 10);
+ * assert.equal(x.unsafe() === 10);
  * ```
  *
  * ```typescript
  * const x = Result.safe(Promise.reject(new Error('bar')));
- * assert(x.rawdog() instanceof Error);
+ * assert.equal(x.unsafe() instanceof Error);
  * ```
  */
 async function safe<Ok>(promise: Promise<Ok>): Promise<Result<Ok, Error>> {
@@ -965,14 +965,14 @@ async function safe<Ok>(promise: Promise<Ok>): Promise<Result<Ok, Error>> {
  * const x = Result.ok('foo');
  * const y = Result.ok('bar');
  * const z = Result.all(x, y);
- * assert(z.rawdog() === ['foo', 'bar']);
+ * assert.equal(z.unsafe() === ['foo', 'bar']);
  * ```
  *
  * ```typescript
  * const x = Result.ok('foo');
  * const y = Result.err('bar');
  * const z = Result.all(x, y);
- * assert(z.rawdog() === 'bar');
+ * assert.equal(z.unsafe() === 'bar');
  * ```
  */
 function all<Results extends Result<unknown, unknown>[]>(
@@ -997,21 +997,21 @@ function all<Results extends Result<unknown, unknown>[]>(
  * const x = Result.ok('foo');
  * const y = Result.ok('bar');
  * const z = Result.any(x, y);
- * assert(z.rawdog() === 'foo');
+ * assert.equal(z.unsafe() === 'foo');
  * ```
  *
  * ```typescript
  * const x = Result.err('foo');
  * const y = Result.ok('bar');
  * const z = Result.any(x, y);
- * assert(z.rawdog() === 'bar');
+ * assert.equal(z.unsafe() === 'bar');
  * ```
  *
  * ```typescript
  * const x = Result.err('foo');
  * const y = Result.err('bar');
  * const z = Result.any(x, y);
- * assert(z.rawdog() === ['foo', 'bar']);
+ * assert.equal(z.unsafe() === ['foo', 'bar']);
  * ```
  */
 function any<Results extends Result<unknown, unknown>[]>(

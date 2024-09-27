@@ -1,24 +1,24 @@
 import { Option } from '../Option';
 
 describe('Option', () => {
-  describe('rawdog', () => {
+  describe('unsafe', () => {
     it('returns the value for an Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
-      const option = mayExist1.rawdog();
+      const option = mayExist1.unsafe();
 
       expect(option).toBe(1);
     });
 
     it('returns the null for an None option', () => {
       const mayExist1: Option<number> = Option.none;
-      const option = mayExist1.rawdog();
+      const option = mayExist1.unsafe();
 
       expect(option).toBe(null);
     });
 
     it('returns the falsy for an None option', () => {
       const mayExist1: Option<number> = Option.none;
-      const option = mayExist1.rawdog(0);
+      const option = mayExist1.unsafe(0);
 
       expect(option).toBe(0);
     });

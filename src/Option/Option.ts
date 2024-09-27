@@ -16,16 +16,16 @@ interface IOptionType<Some> {
    * Returns the contained `Some` or `None` value.
    *
    * ```typescript
-   * const x = Option.some('foo').rawdog();
+   * const x = Option.some('foo').unsafe();
    * assert.equal(x, 'foo');
    * ```
    *
    * ```typescript
-   * const x = Option.none.rawdog();
+   * const x = Option.none.unsafe();
    * assert.equal(x, null);
    * ```
    */
-  rawdog<Falsy extends FalsyValue>(fallback: Falsy): Some | Falsy; // Will probably be renamed to `unsafe` in the future
+  unsafe<Falsy extends FalsyValue>(fallback: Falsy): Some | Falsy; // Will probably be renamed to `unsafe` in the future
 
   /**
    * Returns the contained `Some` value or a provided fallback.
@@ -99,7 +99,7 @@ interface IOptionType<Some> {
    * Option.none.someOrThrow(new Error('no value')) // throws Error('no value')
    * ```
    */
-  someOrThrow<T extends Error>(error: T): Some;
+  someOrThrow(error: unknown): Some;
 
   /**
    * Returns the contained `Some` value or throws an error.
@@ -113,7 +113,7 @@ interface IOptionType<Some> {
    * assert.equal(x, 'foo');
    * ```
    */
-  noneOrThrow<T extends Error>(error: T): null;
+  noneOrThrow(error: unknown): null;
 
   /**
    * Returns the contained `Some` value or the provided `Option`.
@@ -121,17 +121,17 @@ interface IOptionType<Some> {
    * ```typescript
    * const x = Option.none;
    * const y = Option.some('bar');
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, 'bar');
    *
    * const x = Option.some('foo');
    * const y = Option.none;
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, 'foo');
    *
    * const x = Option.none;
    * const y = Option.none;
-   * const z = x.or(y).rawdog();
+   * const z = x.or(y).unsafe();
    * assert.equal(z, null);
    * ```
    */
@@ -143,12 +143,12 @@ interface IOptionType<Some> {
    * ```typescript
    * const x = Option.some('foo').
    *   .map((value) => value + 'bar');
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    * const x = Option.none
    *   .map((value) => value + 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, null);
    * ```
    */
@@ -161,14 +161,14 @@ interface IOptionType<Some> {
    * ```typescript
    * const x = Option.some('foo')
    *   .flatMap((value) => Option.some(value + 'bar'))
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foobar');
    * ```
    *
    * ```typescript
    * const x = Option.none
    *   .flatMap((value) => Option.some(value + 'bar'))
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, null);
    * ```
    */
@@ -183,14 +183,14 @@ interface IOptionType<Some> {
    * ```typescript
    * const x = Option.some('foo')
    *   .filter((value) => value === 'foo')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, 'foo');
    * ```
    *
    * ```typescript
    * const x = Option.some('foo')
    *   .filter((value) => value === 'bar')
-   *   .rawdog();
+   *   .unsafe();
    * assert.equal(x, null);
    * */
   filter(fn: (some: Some) => boolean): Option<Some>;
@@ -201,11 +201,11 @@ interface IOptionType<Some> {
    * ```typescript
    * const x = Option.some('foo').toResult('bar');
    * assert.equal(Result.is(x), true);
-   * assert.equal(x.rawdog(), 'foo');
+   * assert.equal(x.unsafe(), 'foo');
    *
    * const x = Option.none.toResult('bar');
    * assert.equal(Result.is(x), true);
-   * assert.equal(x.rawdog(), 'bar');
+   * assert.equal(x.unsafe(), 'bar');
    * ```
    * */
   toResult<Err>(error: Err): Result<Some, Err>;
@@ -228,7 +228,7 @@ class Some<Some> implements IOptionType<Some> {
   readonly isNone = false;
   constructor(readonly value: Some) {}
 
-  rawdog<Falsy extends FalsyValue>(): Some {
+  unsafe<Falsy extends FalsyValue>(): Some {
     return this.value;
   }
 
@@ -248,11 +248,11 @@ class Some<Some> implements IOptionType<Some> {
     return fn();
   }
 
-  someOrThrow<T extends Error>(error: T): Some {
+  someOrThrow(error: unknown): Some {
     return this.value;
   }
 
-  noneOrThrow<T extends Error>(error: T): null {
+  noneOrThrow(error: unknown): null {
     throw error;
   }
 
@@ -297,7 +297,7 @@ class None<Some> implements IOptionType<Some> {
   readonly isNone = true;
   constructor() {}
 
-  rawdog<T extends FalsyValue>(fallback = null as T): T {
+  unsafe<T extends FalsyValue>(fallback = null as T): T {
     return fallback;
   }
 
@@ -317,11 +317,11 @@ class None<Some> implements IOptionType<Some> {
     return null;
   }
 
-  someOrThrow<T extends Error>(error: T): Some {
+  someOrThrow(error: unknown): Some {
     throw error;
   }
 
-  noneOrThrow<T extends Error>(error: T): null {
+  noneOrThrow(error: unknown): null {
     return null;
   }
 
@@ -381,7 +381,7 @@ function is<Some>(input: unknown): input is Option<Some> {
  * Returns an `Option` with an `Some` value.
  *
  * ```typescript
- * const x = Option.some("foo").rawdog();
+ * const x = Option.some("foo").unsafe();
  * assert.equal(x === "foo");
  * ```
  */
@@ -393,7 +393,7 @@ function some<Some>(value: Some): Option<Some> {
  * Returns an `Option` with an `None` value.
  *
  * ```typescript
- * const x = Option.none.rawdog();
+ * const x = Option.none.unsafe();
  * assert.equal(x === null);
  * ```
  */
@@ -403,12 +403,12 @@ const none = new None() as Option<never>;
  * Returns an `Option` with the option of a promise.
  *
  * ```typescript
- * const x = Option.safe(Promise.resolve("foo")).rawdog();
+ * const x = Option.safe(Promise.resolve("foo")).unsafe();
  * assert.equal(x === "foo");
  * ```
  *
  * ```typescript
- * const x = Option.safe(Promise.reject(new Error('no value'))).rawdog();
+ * const x = Option.safe(Promise.reject(new Error('no value'))).unsafe();
  * assert.equal(x instanceof None);
  * ```
  */
@@ -422,7 +422,7 @@ async function safe<Some>(promise: Promise<Some>): Promise<Option<Some>> {
  * ```typescript
  * const x = Option.some("foo");
  * const y = Option.some("bar");
- * const z = Option.all(x, y).rawdog();
+ * const z = Option.all(x, y).unsafe();
  * assert.deepEqual(z === ["foo", "bar"]);
  * ```
  */
@@ -447,7 +447,7 @@ function all<Options extends Option<unknown>[]>(
  * ```typescript
  * const x = Option.none;
  * const y = Option.some("bar");
- * const z = Option.any(x, y).rawdog();
+ * const z = Option.any(x, y).unsafe();
  * assert(z === "bar");
  * ```
  */
@@ -467,12 +467,12 @@ function any<Options extends Option<unknown>[]>(
  * Returns an `Option` with a value.
  *
  * ```typescript
- * const x = Option.from("foo").rawdog();
+ * const x = Option.from("foo").unsafe();
  * assert(x === "foo");
  * ```
  *
  * ```typescript
- * const x = Option.from('').rawdog();
+ * const x = Option.from('').unsafe();
  * assert(x === null);
  * ```
  */

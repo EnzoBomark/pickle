@@ -1,17 +1,17 @@
 import { Result } from '../Result';
 
 describe('Result', () => {
-  describe('rawdog', () => {
+  describe('unsafe', () => {
     it('returns the ok value', () => {
       const mayFail1: Result<number, 'error1'> = Result.ok(1);
-      const result = mayFail1.rawdog();
+      const result = mayFail1.unsafe();
 
       expect(result).toBe(1);
     });
 
     it('returns the error value', () => {
       const mayFail1: Result<number, 'error1'> = Result.err('error1');
-      const result = mayFail1.rawdog();
+      const result = mayFail1.unsafe();
 
       expect(result).toBe('error1');
     });
@@ -353,10 +353,10 @@ describe('Result', () => {
       });
     });
 
-    describe('rawdog', () => {
+    describe('unsafe', () => {
       it('returns the ok or err value', async () => {
         const mayFail1: Result<number, 'error1'> = Result.ok(1);
-        const result = await Result.async(Promise.resolve(mayFail1)).rawdog();
+        const result = await Result.async(Promise.resolve(mayFail1)).unsafe();
 
         expect(result).toEqual(1);
       });
