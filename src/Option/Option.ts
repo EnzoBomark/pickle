@@ -1,4 +1,3 @@
-import { inspect } from 'util';
 import { Result } from '../Result';
 
 export type Option<T> = Some<T> | None<T>;
@@ -202,7 +201,9 @@ interface IOptionType<Some> {
    * const x = Option.some('foo').toResult('bar');
    * assert.equal(Result.is(x), true);
    * assert.equal(x.unsafe(), 'foo');
+   * ```
    *
+   * ```typescript
    * const x = Option.none.toResult('bar');
    * assert.equal(Result.is(x), true);
    * assert.equal(x.unsafe(), 'bar');
@@ -489,3 +490,5 @@ export const Option = Object.freeze({
   any,
   from,
 });
+
+export { some, none };

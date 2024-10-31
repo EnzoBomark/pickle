@@ -1047,3 +1047,5 @@ export const Result = Object.freeze({
   any,
   async,
 });
+
+export { ok, err };
