@@ -1,7 +1,7 @@
 {
   "name": "@enzobomark/pickle",
   "author": "Enzo Bomark",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Result<Ok, Err> and Option<Some>, implemented for TypeScript.",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -19,12 +19,10 @@
     "test": "jest",
     "build": "tsc"
   },
-  "dependencies": {
+  "devDependencies": {
     "@swc/cli": "0.4.0",
     "@swc/core": "^1.7.26",
-    "@swc/jest": "^0.2.36"
-  },
-  "devDependencies": {
+    "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.13",
     "@types/node": "^22.5.5",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
