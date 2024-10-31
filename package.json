@@ -1,5 +1,6 @@
 {
   "name": "pickle",
+  "author": "Enzo Bomark",
   "version": "0.0.1",
   "description": "Result<Ok, Err> and Option<Some>, implemented for TypeScript.",
   "license": "MIT",
@@ -13,6 +14,7 @@
     "npm": "please-use-pnpm"
   },
   "scripts": {
+    "prepublish": "tsc",
     "test:watch": "jest --watch",
     "test": "jest",
     "build": "tsc"

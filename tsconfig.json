@@ -1,6 +1,6 @@
 {
   "include": ["src/**/*"],
-  "exclude": ["src/**/*/__test__"],
+  "exclude": ["src/**/*/__test__", "node_modules", "dist"],
   "compilerOptions": {
     "target": "es2021",
     "module": "commonjs",
