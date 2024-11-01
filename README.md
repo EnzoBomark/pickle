@@ -79,7 +79,7 @@ If we hold a value of type `Result<T, E>` we know it's either `Ok<T>` or
 ### Result core
 
 ```typescript
-import { Result } from 'pickle';
+import { Result } from '@bmrk/pickle';
 
 function divide(x: number, by: number): Result<number, string> {
   return by === 0 ? Result.err('Division by zero') : Result.ok(x / by);
@@ -402,7 +402,7 @@ An Option represents either something, or nothing. If we hold a value of type `O
 ### Option core
 
 ```typescript
-import { Option } from 'pickle';
+import { Option } from '@bmrk/pickle';
 
 function divide(x: number, by: number): Option<number> {
   return by === 0 ? Option.none : Option.some(x / by);

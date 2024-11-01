@@ -1,5 +1,5 @@
 {
-  "name": "@enzobomark/pickle",
+  "name": "@bmrk/pickle",
   "author": "Enzo Bomark",
   "version": "0.1.0",
   "description": "Result<Ok, Err> and Option<Some>, implemented for TypeScript.",
