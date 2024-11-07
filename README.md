@@ -6,7 +6,7 @@ The `Result` and `Option` utilities are designed to improve error handling and v
 
 Pickle draws inspiration from the error-handling patterns of languages like Rust, where Result and Option types enable more expressive and type-safe management of errors and uncertain values. While this implementation is not a direct 1:1 port from any specific language—given that JavaScript and TypeScript lack native support for Result and Option types—the goal is to introduce some of their advantages into your codebase. Designed to integrate seamlessly with TypeScript's type system, this library enhances the developer experience by improving the handling of errors and uncertain values.
 
-For asynchronous tasks, Pickle provides an AsyncResult helper that wraps a Promise<Result<T, E>>, offering the same level of expressivity and control as a standard Result<T, E>.
+For asynchronous tasks, Pickle provides an `AsyncResult` helper that wraps a `Promise<Result<T, E>>`, offering the same level of expressivity and control as a standard `Result<T, E>`.
 
 ### Table of contents
 
