@@ -2,7 +2,7 @@ import { Option } from '../Option';
 
 describe('Option', () => {
   describe('unsafe', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.unsafe();
 
@@ -25,7 +25,7 @@ describe('Option', () => {
   });
 
   describe('someOr', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.someOr(0);
 
@@ -41,7 +41,7 @@ describe('Option', () => {
   });
 
   describe('noneOr', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.noneOr(0);
 
@@ -57,7 +57,7 @@ describe('Option', () => {
   });
 
   describe('someOrElse', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.someOrElse(() => 0);
 
@@ -73,7 +73,7 @@ describe('Option', () => {
   });
 
   describe('noneOrElse', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.noneOrElse(() => 0);
 
@@ -89,7 +89,7 @@ describe('Option', () => {
   });
 
   describe('someOrThrow', () => {
-    it('returns the value for an Some option', () => {
+    it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.someOrThrow(new Error('error'));
 
@@ -108,7 +108,7 @@ describe('Option', () => {
   });
 
   describe('noneOrThrow', () => {
-    it('throws the error for an Some option', () => {
+    it('throws the error for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
 
       try {
@@ -157,7 +157,7 @@ describe('Option', () => {
   });
 
   describe('map', () => {
-    it('maps over an Some option', () => {
+    it('maps over a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.map((value) => value + 1);
 
@@ -173,7 +173,7 @@ describe('Option', () => {
   });
 
   describe('flatMap', () => {
-    it('maps over an Some option', () => {
+    it('maps over a Some option', () => {
       const mayFail1: Option<number> = Option.some(1);
       const mayFail2: Option<number> = Option.some(2);
       const option = mayFail1.flatMap(() => mayFail2);
@@ -199,14 +199,14 @@ describe('Option', () => {
   });
 
   describe('filter', () => {
-    it('returns a Some for an Some result that passes the predicate', () => {
+    it('returns a Some for a Some result that passes the predicate', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.filter((value) => value === 1);
 
       expect(option.isSome && option.value).toBe(1);
     });
 
-    it('returns a None for an Some result that does not pass the predicate', () => {
+    it('returns a None for a Some result that does not pass the predicate', () => {
       const mayExist1: Option<number> = Option.some(1);
       const option = mayExist1.filter((value) => value === 2);
 
@@ -215,7 +215,7 @@ describe('Option', () => {
   });
 
   describe('toResult', () => {
-    it('returns an Ok result for an Some option', () => {
+    it('returns an Ok result for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const result = mayExist1.toResult('error');
 
@@ -230,8 +230,88 @@ describe('Option', () => {
     });
   });
 
+  describe('effect', () => {
+    it('executes a side effect for a Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const doSomething = jest.fn();
+      mayExist1.effect((v) => doSomething(v));
+
+      expect(mayExist1.isSome && mayExist1.value).toBe(1);
+      expect(doSomething).toHaveBeenCalledWith(1);
+    });
+
+    it('does not execute a side effect for a None value', () => {
+      const mayExist1: Option<number> = Option.none;
+      const doSomething = jest.fn();
+      mayExist1.effect((v) => doSomething(v));
+
+      expect(mayExist1.isNone).toBe(true);
+      expect(doSomething).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('effectNone', () => {
+    it('does not execute a side effect for a Some value', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const doSomething = jest.fn();
+      mayExist1.effectNone(() => doSomething());
+
+      expect(mayExist1.isSome && mayExist1.value).toBe(1);
+      expect(doSomething).not.toHaveBeenCalled();
+    });
+
+    it('executes a side effect for a None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const doSomething = jest.fn();
+      mayExist1.effectNone(() => doSomething());
+
+      expect(mayExist1.isNone).toBe(true);
+      expect(doSomething).toHaveBeenCalled();
+    });
+  });
+
+  describe('inspect', () => {
+    it('inspects the value for a Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const log = jest.fn();
+      mayExist1.inspect(log);
+
+      expect(mayExist1.isSome && mayExist1.value).toBe(1);
+      expect(log).toHaveBeenCalledWith(1);
+    });
+
+    it('inspects the value for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const log = jest.fn();
+      mayExist1.inspect(log);
+
+      expect(mayExist1.isNone).toBe(true);
+      expect(log).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('inspectNone', () => {
+    it('inspects the value for a Some option', () => {
+      const mayExist1: Option<number> = Option.some(1);
+      const log = jest.fn();
+      mayExist1.inspectNone(log);
+
+      expect(mayExist1.isSome && mayExist1.value).toBe(1);
+      expect(log).not.toHaveBeenCalled();
+    });
+
+    it('inspects the value for an None option', () => {
+      const mayExist1: Option<number> = Option.none;
+      const log = jest.fn();
+      mayExist1.inspectNone(log);
+
+      expect(mayExist1.isNone).toBe(true);
+      expect(log).toHaveBeenCalled();
+    });
+  });
+
   describe('Option.some', () => {
-    it('creates an Some option', () => {
+    it('creates a Some option', () => {
       const option = Option.some('success');
 
       expect(option.isSome && option.value).toBe('success');
@@ -247,7 +327,7 @@ describe('Option', () => {
   });
 
   describe('Option.safe', () => {
-    it('returns an Some option for from a resolved promise', async () => {
+    it('returns a Some option for from a resolved promise', async () => {
       const mayFail1: Promise<number> = Promise.resolve(1);
       const option = await Option.safe(mayFail1);
 
@@ -299,7 +379,7 @@ describe('Option', () => {
   });
 
   describe('Option.from', () => {
-    it('returns an Some option for a truthy value', () => {
+    it('returns a Some option for a truthy value', () => {
       const option = Option.from(1);
 
       expect(option.isSome && option.value).toBe(1);
@@ -307,6 +387,20 @@ describe('Option', () => {
 
     it('returns an None option for a falsy value', () => {
       const option = Option.from(null);
+
+      expect(option.isNone).toBe(true);
+    });
+  });
+
+  describe('Option.fromNullable', () => {
+    it('returns a Some option for a truthy value', () => {
+      const option = Option.fromNullable(1);
+
+      expect(option.isSome && option.value).toBe(1);
+    });
+
+    it('returns an None option for a falsy value', () => {
+      const option = Option.fromNullable(null);
 
       expect(option.isNone).toBe(true);
     });

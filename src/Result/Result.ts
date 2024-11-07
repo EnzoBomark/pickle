@@ -284,6 +284,26 @@ interface IResultType<Ok, Err> {
   toOption(): Option<Ok>;
 
   /**
+   * Perform side-effects from the `Ok` value without changing the result.
+   *
+   * ```typescript
+   * const x = Result.ok('foo');
+   * x.effect((value) => notification(value));
+   * ```
+   */
+  effect: (fn: (value: Ok) => void) => Result<Ok, Err>;
+
+  /**
+   * Perform side-effects from the `Err` value without changing the result.
+   *
+   * ```typescript
+   * const x = Result.err('foo');
+   * x.effectErr((error) => notification(error));
+   * ```
+   */
+  effectErr: (fn: (error: Err) => void) => Result<Ok, Err>;
+
+  /**
    * Inspects the `Ok` value.
    *
    * ```typescript
@@ -398,6 +418,15 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return Option.some(this.value);
   }
 
+  effect = (fn: (value: Ok) => void): this => {
+    fn(this.value);
+    return this;
+  };
+
+  effectErr = (): this => {
+    return this;
+  };
+
   inspect = (fn: (value: Ok) => void): this => {
     fn(this.value);
     return this;
@@ -500,6 +529,15 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
   toOption(): Option<Ok> {
     return Option.none;
   }
+
+  effect = (): this => {
+    return this;
+  };
+
+  effectErr = (fn: (error: Err) => void): this => {
+    fn(this.error);
+    return this;
+  };
 
   inspect = (): this => {
     return this;
@@ -760,6 +798,28 @@ interface IAsyncResultType<Ok, Err> {
   toOption: () => Promise<Option<Ok>>;
 
   /**
+   * Perform side-effects from the `Ok` value without changing the result.
+   *
+   * ```typescript
+   * Result.async(Promise.resolve(Result.ok('foo'))
+   *   .effect((value) => notification(value))
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
+   * ```
+   */
+  effect: (fn: (value: Ok) => void) => AsyncResult<Ok, Err>;
+
+  /**
+   * Perform side-effects from the `Err` value without changing the result.
+   *
+   * ```typescript
+   * Result.async(Promise.resolve(Result.err('foo'))
+   *   .effectErr((error) => notification(error))
+   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
+   * ```
+   */
+  effectErr: (fn: (error: Err) => void) => AsyncResult<Ok, Err>;
+
+  /**
    * Inspects the `Ok` value.
    *
    * ```typescript
@@ -876,6 +936,16 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return awaited.toOption();
   }
 
+  effect(fn: (value: Ok) => void) {
+    Promise.resolve(this.result).then((awaited) => awaited.effect(fn));
+    return this;
+  }
+
+  effectErr(fn: (error: Err) => void) {
+    Promise.resolve(this.result).then((awaited) => awaited.effectErr(fn));
+    return this;
+  }
+
   inspect(fn: (value: Ok) => void) {
     Promise.resolve(this.result).then((awaited) => awaited.inspect(fn));
     return this;
@@ -948,14 +1018,10 @@ function err<Err>(error: Err): Result<never, Err> {
  * assert.equal(x.unsafe() instanceof Error);
  * ```
  */
-async function safe<Ok>(promise: Promise<Ok>): Promise<Result<Ok, Error>> {
+async function safe<Ok>(promise: Promise<Ok>): Promise<Result<Ok, unknown>> {
   return promise
     .then((value) => Result.ok(value))
-    .catch((error) =>
-      error instanceof Error
-        ? Result.err(error)
-        : Result.err(new Error('unexpected error'))
-    );
+    .catch((error: unknown) => Result.err(error));
 }
 
 /**
@@ -1030,6 +1096,40 @@ function any<Results extends Result<unknown, unknown>[]>(
 }
 
 /**
+ * Returns a `Result` with an `Ok` value if `value` is truthy, otherwise an `Err` value.
+ *
+ * ```typescript
+ * const x = Result.from("foo");
+ * assert(x.isOk === true);
+ * ```
+ *
+ * ```typescript
+ * const x = Result.from('');
+ * assert(x.isErr === true);
+ * ```
+ */
+function from<T, E>(value: T, err: E): Result<T, E> {
+  return !value ? Result.err(err) : Result.ok(value);
+}
+
+/**
+ * Returns a `Result` with an `Ok` value if `value` is not null, otherwise an `Err` value.
+ *
+ * ```typescript
+ * const x = Result.fromNullable("foo");
+ * assert(x.isOk === true);
+ * ```
+ *
+ * ```typescript
+ * const x = Result.fromNullable(null);
+ * assert(x.isErr === true);
+ * ```
+ */
+function fromNullable<T, E>(value: T, err: E): Result<T, E> {
+  return value === null ? Result.err(err) : Result.ok(value);
+}
+
+/**
  * Returns `AsyncResult`
  */
 function async<Ok, Err>(
@@ -1045,6 +1145,8 @@ export const Result = Object.freeze({
   safe,
   all,
   any,
+  from,
+  fromNullable,
   async,
 });
 

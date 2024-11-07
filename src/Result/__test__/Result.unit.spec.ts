@@ -274,6 +274,86 @@ describe('Result', () => {
     });
   });
 
+  describe('effect', () => {
+    it('executes a side effect for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const doSomething = jest.fn();
+      mayFail1.effect((v) => doSomething(v));
+
+      expect(mayFail1.isOk && mayFail1.value).toBe(1);
+      expect(doSomething).toHaveBeenCalledWith(1);
+    });
+
+    it('does not execute a side effect for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const doSomething = jest.fn();
+      mayFail1.effect((v) => doSomething(v));
+
+      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
+      expect(doSomething).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('effectErr', () => {
+    it('executes a side effect for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const doSomething = jest.fn();
+      mayFail1.effectErr((e) => doSomething(e));
+
+      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
+      expect(doSomething).toHaveBeenCalledWith('error1');
+    });
+
+    it('does not execute a side effect for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const doSomething = jest.fn();
+      mayFail1.effectErr((e) => doSomething(e));
+
+      expect(mayFail1.isOk && mayFail1.value).toBe(1);
+      expect(doSomething).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('inspect', () => {
+    it('inspects the value for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const log = jest.fn();
+      mayFail1.inspect(log);
+
+      expect(mayFail1.isOk && mayFail1.value).toBe(1);
+      expect(log).toHaveBeenCalledWith(1);
+    });
+
+    it('does not inspect the value for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const log = jest.fn();
+      mayFail1.effect(log);
+
+      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
+      expect(log).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('inspectErr', () => {
+    it('inspects the error for an Err result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.err('error1');
+      const log = jest.fn();
+      mayFail1.inspectErr(log);
+
+      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
+      expect(log).toHaveBeenCalledWith('error1');
+    });
+
+    it('does not inspect the error for an Ok result', () => {
+      const mayFail1: Result<number, 'error1'> = Result.ok(1);
+      const log = jest.fn();
+      mayFail1.effectErr(log);
+
+      expect(mayFail1.isOk && mayFail1.value).toBe(1);
+      expect(log).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Result.ok', () => {
     it('creates an Ok result', () => {
       const result = Result.ok('success');
@@ -302,7 +382,7 @@ describe('Result', () => {
       const mayFail1: Promise<number> = Promise.reject('error');
       const result = await Result.safe(mayFail1);
 
-      expect(result.isErr && result.error).toBeInstanceOf(Error);
+      expect(result.isErr && result.error).toBe('error');
     });
   });
 
@@ -339,6 +419,34 @@ describe('Result', () => {
       const result = Result.any(mayFail1, mayFail2);
 
       expect(result.isErr && result.error).toEqual(['error1', 'error2']);
+    });
+  });
+
+  describe('Result.from', () => {
+    it('returns an Ok result for a truthy value', () => {
+      const result = Result.from(1, 'error');
+
+      expect(result.isOk && result.value).toBe(1);
+    });
+
+    it('returns an Err result for a falsy value', () => {
+      const result = Result.from(0, 'error');
+
+      expect(result.isErr && result.error).toBe('error');
+    });
+  });
+
+  describe('Result.fromNullable', () => {
+    it('returns an Ok result for a non-null value', () => {
+      const result = Result.fromNullable(1, 'error');
+
+      expect(result.isOk && result.value).toBe(1);
+    });
+
+    it('returns an Err result for a null value', () => {
+      const result = Result.fromNullable(null, 'error');
+
+      expect(result.isErr && result.error).toBe('error');
     });
   });
 

@@ -212,6 +212,26 @@ interface IOptionType<Some> {
   toResult<Err>(error: Err): Result<Some, Err>;
 
   /**
+   * Perform side-effects from the `Some` value without changing the option.
+   *
+   * ```typescript
+   * const x = Option.ok('foo');
+   * x.effect((value) => notification(value));
+   * ```
+   */
+  effect: (fn: (value: Some) => void) => Option<Some>;
+
+  /**
+   * Perform side-effects if the option is `None` without changing the option.
+   *
+   * ```typescript
+   * const x = Option.ok('foo');
+   * x.effectNone(() => notification("no value"));
+   * ```
+   */
+  effectNone: (fn: () => void) => Option<Some>;
+
+  /**
    * Inspects the `Some` value.
    *
    * ```typescript
@@ -220,6 +240,16 @@ interface IOptionType<Some> {
    * ```
    */
   inspect(fn: (value: Some) => void): Option<Some>;
+
+  /**
+   * Inspects if the option is `None`.
+   *
+   * ```typescript
+   * const x = Option.ok('foo');
+   * x.inspectNone(() => console.log("no value")); // logs 'no value'
+   * ```
+   */
+  inspectNone(fn: () => void): Option<Some>;
 }
 
 class Some<Some> implements IOptionType<Some> {
@@ -285,10 +315,23 @@ class Some<Some> implements IOptionType<Some> {
     return Result.ok(this.value);
   }
 
+  effect(fn: (value: Some) => void): Option<Some> {
+    fn(this.value);
+    return this;
+  }
+
+  effectNone = (): this => {
+    return this;
+  };
+
   inspect(fn: (value: Some) => void): Option<Some> {
     fn(this.value);
     return this;
   }
+
+  inspectNone = (): this => {
+    return this;
+  };
 }
 
 class None<Some> implements IOptionType<Some> {
@@ -356,9 +399,23 @@ class None<Some> implements IOptionType<Some> {
     return Result.err(error);
   }
 
+  effect(fn: (value: Some) => void): Option<Some> {
+    return this;
+  }
+
+  effectNone = (fn: () => void): this => {
+    fn();
+    return this;
+  };
+
   inspect(fn: (value: Some) => void): Option<Some> {
     return this;
   }
+
+  inspectNone = (fn: () => void): this => {
+    fn();
+    return this;
+  };
 }
 
 /**
@@ -468,17 +525,34 @@ function any<Options extends Option<unknown>[]>(
  * Returns an `Option` with a value.
  *
  * ```typescript
- * const x = Option.from("foo").unsafe();
- * assert(x === "foo");
+ * const x = Option.from("foo");
+ * assert(x.isSome === true);
  * ```
  *
  * ```typescript
- * const x = Option.from('').unsafe();
- * assert(x === null);
+ * const x = Option.from('');
+ * assert(x.isNone === true);
  * ```
  */
 function from<T>(value: T): Option<T> {
   return !value ? Option.none : Option.some(value);
+}
+
+/**
+ * Returns an `Option` with a `Some` value if the value is not `null`.
+ *
+ * ```typescript
+ * const x = Option.fromNullable("foo");
+ * assert(x.isSome === true);
+ * ```
+ *
+ * ```typescript
+ * const x = Option.fromNullable(null);
+ * assert(x.isNone === true);
+ * ```
+ */
+function fromNullable<T>(value: T): Option<T> {
+  return value === null ? Option.none : Option.some(value);
 }
 
 export const Option = Object.freeze({
@@ -489,6 +563,7 @@ export const Option = Object.freeze({
   all,
   any,
   from,
+  fromNullable,
 });
 
 export { some, none };

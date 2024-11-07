@@ -4,9 +4,9 @@ The `Result` and `Option` utilities are designed to improve error handling and v
 
 ## Purpose
 
-Inspired by Rust's error-handling and takes cues from existing TypeScript libraries like [Oxide.ts](https://github.com/traverse1984/oxide.ts).
+Pickle draws inspiration from the error-handling patterns of languages like Rust, where Result and Option types enable more expressive and type-safe management of errors and uncertain values. While this implementation is not a direct 1:1 port from any specific language—given that JavaScript and TypeScript lack native support for Result and Option types—the goal is to introduce some of their advantages into your codebase. Designed to integrate seamlessly with TypeScript's type system, this library enhances the developer experience by improving the handling of errors and uncertain values.
 
-While this implementation isn't a direct 1:1 port from Rust or any other language (since JavaScript and TypeScript are not inherently designed with Result and Option types), the goal is to bring some of their key features into TypeScript. This library is built to work with TypeScript's type system, not against it, enhancing the developer experience in handling uncertain values and errors.
+For asynchronous tasks, Pickle provides an AsyncResult helper that wraps a Promise<Result<T, E>>, offering the same level of expressivity and control as a standard Result<T, E>.
 
 ### Table of contents
 
@@ -30,6 +30,8 @@ While this implementation isn't a direct 1:1 port from Rust or any other languag
   - [flatMapErr](#flatMapErr)
   - [filter](#filter)
   - [toOption](#toOption)
+  - [effect](#effect)
+  - [effectErr](#effectErr)
   - [inspect](#inspect)
   - [inspectErr](#inspectErr)
 - [Static methods](#static-methods)
@@ -39,6 +41,8 @@ While this implementation isn't a direct 1:1 port from Rust or any other languag
   - [safe](#safe)
   - [all](#all)
   - [any](#any)
+  - [from](#from)
+  - [fromNullable](#fromNullable)
   - [async](#async)
   </details>
 
@@ -59,7 +63,10 @@ While this implementation isn't a direct 1:1 port from Rust or any other languag
   - [flatMap](#flatMap-1)
   - [filter](#filter-1)
   - [toResult](#toResult)
+  - [effect](#effect-1)
+  - [effectNone](#effectNone)
   - [inspect](#inspect-1)
+  - [inspectNone](#inspectNone)
 - [Static methods](#static-methods-1)
   - [is](#is-1)
   - [some](#some)
@@ -68,6 +75,7 @@ While this implementation isn't a direct 1:1 port from Rust or any other languag
   - [all](#all-1)
   - [any](#any-1)
   - [from](#from)
+  - [fromNullable](#fromNullable-1)
   </details>
 
 ## Result
@@ -283,6 +291,30 @@ assert.equal(res.isNone, true);
 assert.equal(res.unsafe(), null);
 ```
 
+#### Effect
+
+Perform side-effects from the `Ok` value without changing the result.
+
+```typescript
+const res = okResult.effect((num) => nitification(num)); // Fire and forget the notification function
+assert.equal(res.unsafe(), 5);
+
+const res = errResult.effect((num) => nitification(num)); // Does execute the notification function
+assert.equal(res.unsafe(), 'Division by zero');
+```
+
+#### EffectErr
+
+Perform side-effects from the `Err` value without changing the result.
+
+```typescript
+const res = okResult.effectErr((err) => notification(err)); // Does not execute the notification function
+assert.equal(res.unsafe(), 5);
+
+const res = errResult.effectErr((err) => notification(err)); // Fire and forget the notification function
+assert.equal(res.unsafe(), 'Division by zero');
+```
+
 #### Inspect
 
 Inspects the `Ok` value.
@@ -382,6 +414,30 @@ const res: Result<never, [string, string]> = Result.any(
   Result.err('Error 2')
 );
 assert.deepEqual(res.unsafe(), ['Error 1', 'Error 2']);
+```
+
+#### From
+
+Returns a `Result` with an `Ok` value if `value` is truthy, otherwise an `Err` value.
+
+```typescript
+const res: Result<number, string> = Result.from(5);
+assert.equal(res.isOk, true);
+
+const res: Result<number, string> = Result.from(0);
+assert.equal(res.isErr, true);
+```
+
+#### FromNullable
+
+Returns a `Result` with an `Ok` value if `value` is not null, otherwise an `Err` value.
+
+```typescript
+const res: Result<number, string> = Result.fromNullable(5);
+assert.equal(res.isOk, true);
+
+const res: Result<number, string> = Result.fromNullable(null);
+assert.equal(res.isErr, true);
 ```
 
 #### Async
@@ -556,6 +612,30 @@ const res: Result<number, string> = noneOption.toResult('No value');
 assert.equal(res.unsafe(), 'No value');
 ```
 
+#### Effect
+
+Perform side-effects from the `Some` value without changing the option.
+
+```typescript
+const res = someOption.effect((num) => notification(num)); // Fire and forget the notification function
+assert.equal(res.unsafe(), 5);
+
+const res = noneOption.effect((num) => notification(num)); // Does not execute the notification function
+assert.equal(res.unsafe(), null);
+```
+
+#### EffectNone
+
+Perform side-effects if the option is `None` without changing the option.
+
+```typescript
+const res = someOption.effectNone(() => notification()); // Does not execute the notification function
+assert.equal(res.unsafe(), 5);
+
+const res = noneOption.effectNone(() => notification()); // Fire and forget the notification function
+assert.equal(res.unsafe(), null);
+```
+
 #### Inspect
 
 Inspects the `Some` value.
@@ -565,6 +645,18 @@ const res = someOption.inspect((num) => console.log(num)); // Logs 5
 assert.equal(res.unsafe(), 5);
 
 const res = noneOption.inspect((num) => console.log(num)); // Does not log
+assert.equal(res.unsafe(), null);
+```
+
+#### InspectNone
+
+Inspects if the option is `None`.
+
+```typescript
+const res = someOption.inspectNone(() => console.log('No value')); // Does not log
+assert.equal(res.unsafe(), 5);
+
+const res = noneOption.inspectNone(() => console.log('No value')); // Logs "No value"
 assert.equal(res.unsafe(), null);
 ```
 
@@ -642,6 +734,18 @@ const res: Option<number> = Option.from(5);
 assert.equal(res.unsafe(), 5);
 ```
 
+#### FromNullable
+
+Returns an `Option` with a value if it is not `null`.
+
+```typescript
+const res: Option<number> = Option.fromNullable(5);
+assert.equal(res.unsafe(), 5);
+
+const res: Option<number> = Option.fromNullable(null);
+assert.equal(res.unsafe(), null);
+```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
@@ -653,4 +757,4 @@ This project is licensed under the MIT License.
 ## Special Thanks
 
 Special thanks to my friend [Emric](https://github.com/Istanful) for the name suggestion.
-"To remove rust chemically, the workpieces can be pickled or phosphatised."
+"To remove rust chemically, the workpieces can be pickled."
