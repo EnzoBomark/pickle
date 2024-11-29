@@ -32,8 +32,6 @@ For asynchronous tasks, Pickle provides an `AsyncResult` helper that wraps a `Pr
   - [toOption](#toOption)
   - [effect](#effect)
   - [effectErr](#effectErr)
-  - [inspect](#inspect)
-  - [inspectErr](#inspectErr)
 - [Static methods](#static-methods)
   - [is](#is)
   - [ok](#ok)
@@ -65,8 +63,6 @@ For asynchronous tasks, Pickle provides an `AsyncResult` helper that wraps a `Pr
   - [toResult](#toResult)
   - [effect](#effect-1)
   - [effectNone](#effectNone)
-  - [inspect](#inspect-1)
-  - [inspectNone](#inspectNone)
 - [Static methods](#static-methods-1)
   - [is](#is-1)
   - [some](#some)
@@ -312,30 +308,6 @@ const res = okResult.effectErr((err) => notification(err)); // Does not execute 
 assert.equal(res.unsafe(), 5);
 
 const res = errResult.effectErr((err) => notification(err)); // Fire and forget the notification function
-assert.equal(res.unsafe(), 'Division by zero');
-```
-
-#### Inspect
-
-Inspects the `Ok` value.
-
-```typescript
-const res = okResult.inspect((num) => console.log(num)); // Logs 5
-assert.equal(res.unsafe(), 5);
-
-const res = errResult.inspect((num) => console.log(num)); // Does not log
-assert.equal(res.unsafe(), 'Division by zero');
-```
-
-#### InspectErr
-
-Inspects the `Err` value.
-
-```typescript
-const res = okResult.inspectErr((err) => console.log(err)); // Does not log
-assert.equal(res.unsafe(), 5);
-
-const res = errResult.inspectErr((err) => console.log(err)); // Logs "Division by zero"
 assert.equal(res.unsafe(), 'Division by zero');
 ```
 
@@ -633,30 +605,6 @@ const res = someOption.effectNone(() => notification()); // Does not execute the
 assert.equal(res.unsafe(), 5);
 
 const res = noneOption.effectNone(() => notification()); // Fire and forget the notification function
-assert.equal(res.unsafe(), null);
-```
-
-#### Inspect
-
-Inspects the `Some` value.
-
-```typescript
-const res = someOption.inspect((num) => console.log(num)); // Logs 5
-assert.equal(res.unsafe(), 5);
-
-const res = noneOption.inspect((num) => console.log(num)); // Does not log
-assert.equal(res.unsafe(), null);
-```
-
-#### InspectNone
-
-Inspects if the option is `None`.
-
-```typescript
-const res = someOption.inspectNone(() => console.log('No value')); // Does not log
-assert.equal(res.unsafe(), 5);
-
-const res = noneOption.inspectNone(() => console.log('No value')); // Logs "No value"
 assert.equal(res.unsafe(), null);
 ```
 

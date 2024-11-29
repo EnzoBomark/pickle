@@ -230,26 +230,6 @@ interface IOptionType<Some> {
    * ```
    */
   effectNone: (fn: () => void) => Option<Some>;
-
-  /**
-   * Inspects the `Some` value.
-   *
-   * ```typescript
-   * const x = Option.ok('foo');
-   * x.inspect((value) => console.log(value)); // logs 'foo'
-   * ```
-   */
-  inspect(fn: (value: Some) => void): Option<Some>;
-
-  /**
-   * Inspects if the option is `None`.
-   *
-   * ```typescript
-   * const x = Option.ok('foo');
-   * x.inspectNone(() => console.log("no value")); // logs 'no value'
-   * ```
-   */
-  inspectNone(fn: () => void): Option<Some>;
 }
 
 class Some<Some> implements IOptionType<Some> {
@@ -321,15 +301,6 @@ class Some<Some> implements IOptionType<Some> {
   }
 
   effectNone = (): this => {
-    return this;
-  };
-
-  inspect(fn: (value: Some) => void): Option<Some> {
-    fn(this.value);
-    return this;
-  }
-
-  inspectNone = (): this => {
     return this;
   };
 }
@@ -404,15 +375,6 @@ class None<Some> implements IOptionType<Some> {
   }
 
   effectNone = (fn: () => void): this => {
-    fn();
-    return this;
-  };
-
-  inspect(fn: (value: Some) => void): Option<Some> {
-    return this;
-  }
-
-  inspectNone = (fn: () => void): this => {
     fn();
     return this;
   };

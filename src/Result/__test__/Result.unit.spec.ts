@@ -314,46 +314,6 @@ describe('Result', () => {
     });
   });
 
-  describe('inspect', () => {
-    it('inspects the value for an Ok result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.ok(1);
-      const log = jest.fn();
-      mayFail1.inspect(log);
-
-      expect(mayFail1.isOk && mayFail1.value).toBe(1);
-      expect(log).toHaveBeenCalledWith(1);
-    });
-
-    it('does not inspect the value for an Err result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.err('error1');
-      const log = jest.fn();
-      mayFail1.effect(log);
-
-      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
-      expect(log).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('inspectErr', () => {
-    it('inspects the error for an Err result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.err('error1');
-      const log = jest.fn();
-      mayFail1.inspectErr(log);
-
-      expect(mayFail1.isErr && mayFail1.error).toBe('error1');
-      expect(log).toHaveBeenCalledWith('error1');
-    });
-
-    it('does not inspect the error for an Ok result', () => {
-      const mayFail1: Result<number, 'error1'> = Result.ok(1);
-      const log = jest.fn();
-      mayFail1.effectErr(log);
-
-      expect(mayFail1.isOk && mayFail1.value).toBe(1);
-      expect(log).not.toHaveBeenCalled();
-    });
-  });
-
   describe('Result.ok', () => {
     it('creates an Ok result', () => {
       const result = Result.ok('success');

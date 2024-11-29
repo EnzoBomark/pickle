@@ -302,26 +302,6 @@ interface IResultType<Ok, Err> {
    * ```
    */
   effectErr: (fn: (error: Err) => void) => Result<Ok, Err>;
-
-  /**
-   * Inspects the `Ok` value.
-   *
-   * ```typescript
-   * const x = Result.ok('foo');
-   * x.inspect((value) => console.log(value)); // logs 'foo'
-   * ```
-   */
-  inspect: (fn: (value: Ok) => void) => Result<Ok, Err>;
-
-  /**
-   * Inspects the `Err` value.
-   *
-   * ```typescript
-   * const x = Result.err('foo');
-   * x.inspectErr((error) => console.error(error)); // logs 'foo'
-   * ```
-   */
-  inspectErr: (fn: (error: Err) => void) => Result<Ok, Err>;
 }
 
 class Ok<Ok, Err> implements IResultType<Ok, Err> {
@@ -426,15 +406,6 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
   effectErr = (): this => {
     return this;
   };
-
-  inspect = (fn: (value: Ok) => void): this => {
-    fn(this.value);
-    return this;
-  };
-
-  inspectErr = (): this => {
-    return this;
-  };
 }
 
 class Err<Ok, Err> implements IResultType<Ok, Err> {
@@ -535,15 +506,6 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
   };
 
   effectErr = (fn: (error: Err) => void): this => {
-    fn(this.error);
-    return this;
-  };
-
-  inspect = (): this => {
-    return this;
-  };
-
-  inspectErr = (fn: (error: Err) => void): this => {
     fn(this.error);
     return this;
   };
@@ -818,28 +780,6 @@ interface IAsyncResultType<Ok, Err> {
    * ```
    */
   effectErr: (fn: (error: Err) => void) => AsyncResult<Ok, Err>;
-
-  /**
-   * Inspects the `Ok` value.
-   *
-   * ```typescript
-   * Result.async(Promise.resolve(Result.ok('foo'))
-   *   .inspect((value) => console.log(value))
-   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
-   * ```
-   */
-  inspect: (fn: (value: Ok) => void) => AsyncResult<Ok, Err>;
-
-  /**
-   * Inspects the `Err` value.
-   *
-   * ```typescript
-   * Result.async(Promise.resolve(Result.err('foo'))
-   *   .inspectErr((error) => console.error(error))
-   *   .then((x) => assert.equal(x.unsafe() === 'foo'));
-   * ```
-   */
-  inspectErr: (fn: (error: Err) => void) => AsyncResult<Ok, Err>;
 }
 
 class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
@@ -943,16 +883,6 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
 
   effectErr(fn: (error: Err) => void) {
     Promise.resolve(this.result).then((awaited) => awaited.effectErr(fn));
-    return this;
-  }
-
-  inspect(fn: (value: Ok) => void) {
-    Promise.resolve(this.result).then((awaited) => awaited.inspect(fn));
-    return this;
-  }
-
-  inspectErr(fn: (error: Err) => void) {
-    Promise.resolve(this.result).then((awaited) => awaited.inspectErr(fn));
     return this;
   }
 }

@@ -270,46 +270,6 @@ describe('Option', () => {
     });
   });
 
-  describe('inspect', () => {
-    it('inspects the value for a Some option', () => {
-      const mayExist1: Option<number> = Option.some(1);
-      const log = jest.fn();
-      mayExist1.inspect(log);
-
-      expect(mayExist1.isSome && mayExist1.value).toBe(1);
-      expect(log).toHaveBeenCalledWith(1);
-    });
-
-    it('inspects the value for an None option', () => {
-      const mayExist1: Option<number> = Option.none;
-      const log = jest.fn();
-      mayExist1.inspect(log);
-
-      expect(mayExist1.isNone).toBe(true);
-      expect(log).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('inspectNone', () => {
-    it('inspects the value for a Some option', () => {
-      const mayExist1: Option<number> = Option.some(1);
-      const log = jest.fn();
-      mayExist1.inspectNone(log);
-
-      expect(mayExist1.isSome && mayExist1.value).toBe(1);
-      expect(log).not.toHaveBeenCalled();
-    });
-
-    it('inspects the value for an None option', () => {
-      const mayExist1: Option<number> = Option.none;
-      const log = jest.fn();
-      mayExist1.inspectNone(log);
-
-      expect(mayExist1.isNone).toBe(true);
-      expect(log).toHaveBeenCalled();
-    });
-  });
-
   describe('Option.some', () => {
     it('creates a Some option', () => {
       const option = Option.some('success');
