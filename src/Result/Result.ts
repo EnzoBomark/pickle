@@ -939,19 +939,39 @@ function err<Err>(error: Err): Result<never, Err> {
  * Returns a `Result` with the result of a promise.
  *
  * ```typescript
- * const x = Result.safe(Promise.resolve('foo'));
+ * const fn = () => {
+ *   return 10;
+ * }
+ *
+ * const x = Result.safe(fn);
+ *
  * assert.equal(x.unsafe() === 10);
  * ```
  *
  * ```typescript
- * const x = Result.safe(Promise.reject(new Error('bar')));
+ * const fn = () => {
+ *   throw new Error('foo');
+ * }
+ * const x = Result.safe(fn);
+ *
  * assert.equal(x.unsafe() instanceof Error);
  * ```
  */
-async function safe<Ok>(promise: Promise<Ok>): Promise<Result<Ok, unknown>> {
-  return promise
-    .then((value) => Result.ok(value))
-    .catch((error: unknown) => Result.err(error));
+function safe<Ok>(fn: () => Promise<Ok>): AsyncResult<Ok, unknown>;
+function safe<Ok>(fn: () => Ok): Result<Ok, unknown>;
+function safe<Ok>(
+  fn: () => MaybePromise<Ok>
+): Result<Ok, unknown> | AsyncResult<Ok, unknown> {
+  try {
+    const result = fn();
+    if (result instanceof Promise) {
+      return async(result.then(ok).catch(err) as Promise<Result<Ok, unknown>>);
+    }
+
+    return ok(result);
+  } catch (error) {
+    return err(error);
+  }
 }
 
 /**

@@ -287,15 +287,35 @@ describe('Option', () => {
   });
 
   describe('Option.safe', () => {
+    it('returns an Ok result for from a function', () => {
+      const mayFail1: () => number = () => {
+        return 1;
+      };
+
+      const option = Option.safe(mayFail1);
+
+      expect(option.isSome && option.value).toBe(1);
+    });
+
+    it('returns an Err option for from a function', () => {
+      const mayFail1: () => number = () => {
+        throw 'error';
+      };
+
+      const option = Option.safe(mayFail1);
+
+      expect(option.isNone).toBe(true);
+    });
+
     it('returns a Some option for from a resolved promise', async () => {
-      const mayFail1: Promise<number> = Promise.resolve(1);
+      const mayFail1: () => Promise<number> = () => Promise.resolve(1);
       const option = await Option.safe(mayFail1);
 
       expect(option.isSome && option.value).toBe(1);
     });
 
     it('returns an Err option for from a rejected promise', async () => {
-      const mayFail1: Promise<number> = Promise.reject('error');
+      const mayFail1: () => Promise<number> = () => Promise.reject('error');
       const option = await Option.safe(mayFail1);
 
       expect(option.isNone).toBe(true);

@@ -345,10 +345,12 @@ assert.equal(res.unsafe(), 'Error');
 Returns a `Result` with the result of a promise.
 
 ```typescript
-const res: Result<number, string> = Result.safe(Promise.resolve(5));
+const res: Result<number, string> = await Result.safe(() => Promise.resolve(5));
 assert.equal(res.unsafe(), 5);
 
-const res: Result<number, string> = Result.safe(Promise.reject('Error'));
+const res: Result<number, string> = await Result.safe(() =>
+  Promise.reject('Error')
+);
 assert.equal(res.unsafe(), 'Error');
 ```
 
@@ -642,10 +644,10 @@ assert.equal(res.unsafe(), null);
 Returns an `Option` with the result of a promise.
 
 ```typescript
-const res: Option<number> = Option.safe(Promise.resolve(5));
+const res: Option<number> = await Option.safe(() => Promise.resolve(5));
 assert.equal(res.unsafe(), 5);
 
-const res: Option<number> = Option.safe(Promise.reject('Error'));
+const res: Option<number> = await Option.safe(() => Promise.reject('Error'));
 assert.equal(res.unsafe(), null);
 ```
 

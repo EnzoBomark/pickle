@@ -432,8 +432,19 @@ const none = new None() as Option<never>;
  * assert.equal(x instanceof None);
  * ```
  */
-async function safe<Some>(promise: Promise<Some>): Promise<Option<Some>> {
-  return promise.then((value) => Option.some(value)).catch(() => Option.none);
+function safe<Some>(fn: () => Promise<Some>): Promise<Option<Some>>;
+function safe<Some>(fn: () => Some): Option<Some>;
+function safe<Some>(fn: () => MaybePromise<Some>): MaybePromise<Option<Some>> {
+  try {
+    const result = fn();
+    if (result instanceof Promise) {
+      return result.then(some).catch(() => none) as Promise<Option<Some>>;
+    }
+
+    return some(result);
+  } catch (_) {
+    return none;
+  }
 }
 
 /**

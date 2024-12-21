@@ -331,16 +331,36 @@ describe('Result', () => {
   });
 
   describe('Result.safe', () => {
+    it('returns an Ok result for from a function', () => {
+      const mayFail1: () => number = () => {
+        return 1;
+      };
+
+      const result = Result.safe(mayFail1);
+
+      expect(result.isOk && result.value).toBe(1);
+    });
+
+    it('returns an Err result for from a function', () => {
+      const mayFail1: () => number = () => {
+        throw 'error';
+      };
+
+      const result = Result.safe(mayFail1);
+
+      expect(result.isErr && result.error).toBe('error');
+    });
+
     it('returns an Ok result for from a resolved promise', async () => {
-      const mayFail1: Promise<number> = Promise.resolve(1);
+      const mayFail1: () => Promise<number> = () => Promise.resolve(1);
       const result = await Result.safe(mayFail1);
 
       expect(result.isOk && result.value).toBe(1);
     });
 
     it('returns an Err result for from a rejected promise', async () => {
-      const mayFail1: Promise<number> = Promise.reject('error');
-      const result = await Result.safe(mayFail1);
+      const mayFail1: () => Promise<number> = () => Promise.reject('error');
+      const result = await Result.safe(() => mayFail1());
 
       expect(result.isErr && result.error).toBe('error');
     });
