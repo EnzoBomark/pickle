@@ -300,7 +300,7 @@ class Some<Some> implements IOptionType<Some> {
     return this;
   }
 
-  effectNone = (): this => {
+  effectNone = (): Option<Some> => {
     return this;
   };
 }
@@ -374,7 +374,7 @@ class None<Some> implements IOptionType<Some> {
     return this;
   }
 
-  effectNone = (fn: () => void): this => {
+  effectNone = (fn: () => void): Option<Some> => {
     fn();
     return this;
   };

@@ -398,12 +398,12 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return Option.some(this.value);
   }
 
-  effect = (fn: (value: Ok) => void): this => {
+  effect = (fn: (value: Ok) => void): Result<Ok, Err> => {
     fn(this.value);
     return this;
   };
 
-  effectErr = (): this => {
+  effectErr = (): Result<Ok, Err> => {
     return this;
   };
 }
@@ -501,11 +501,11 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return Option.none;
   }
 
-  effect = (): this => {
+  effect = (): Result<Ok, Err> => {
     return this;
   };
 
-  effectErr = (fn: (error: Err) => void): this => {
+  effectErr = (fn: (error: Err) => void): Result<Ok, Err> => {
     fn(this.error);
     return this;
   };
