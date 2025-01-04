@@ -531,10 +531,10 @@ assert.equal(res, 0);
 Returns the contained `Some` value or the provided `Option`.
 
 ```typescript
-const res: Option<number> = someOption.or(Some(0));
+const res: Option<number> = someOption.or(Option.some(0));
 assert.equal(res.unsafe(), 5);
 
-const res: Option<number> = noneOption.or(Some(0));
+const res: Option<number> = noneOption.or(Option.some(0));
 assert.equal(res.unsafe(), 0);
 ```
 
@@ -555,10 +555,10 @@ assert.equal(res.unsafe(), null);
 Maps a `Option<Some, None>` to `Option<NewSome, None>` by applying a function to a contained `Some` value, flattening the `None` value.
 
 ```typescript
-const res: Option<number> = someOption.flatMap((num) => Some(num * 2));
+const res: Option<number> = someOption.flatMap((num) => Option.some(num * 2));
 assert.equal(res.unsafe(), 10);
 
-const res: Option<number> = noneOption.flatMap((num) => Some(num * 2));
+const res: Option<number> = noneOption.flatMap((num) => Option.some(num * 2));
 assert.equal(res.unsafe(), null);
 ```
 
@@ -626,7 +626,7 @@ assert.equal(res, true);
 Returns an `Option` with a `Some` value.
 
 ```typescript
-const res: Option<number> = Some(5);
+const res: Option<number> = Option.some(5);
 assert.equal(res.unsafe(), 5);
 ```
 
@@ -635,7 +635,7 @@ assert.equal(res.unsafe(), 5);
 Returns an `Option` with a `None` value.
 
 ```typescript
-const res: Option<number> = None;
+const res: Option<number> = Option.none;
 assert.equal(res.unsafe(), null);
 ```
 
@@ -656,10 +656,10 @@ assert.equal(res.unsafe(), null);
 Returns an `Option` with an array of `Some` values or the first `None` value.
 
 ```typescript
-const res: Option<number[]> = Option.all(Some(1), Some(2));
+const res: Option<number[]> = Option.all(Option.some(1), Option.some(2));
 assert.deepEqual(res.unsafe(), [1, 2]);
 
-const res: Option<number[]> = Option.all(Some(1), None);
+const res: Option<number[]> = Option.all(Option.some(1), Option.none);
 assert.equal(res.unsafe(), null);
 ```
 
@@ -668,10 +668,10 @@ assert.equal(res.unsafe(), null);
 Returns an `Option` with the first `Some` value or an array of `None` values.
 
 ```typescript
-const res: Option<number> = Option.any(Some(1), None);
+const res: Option<number> = Option.any(Option.some(1), Option.none);
 assert.equal(res.unsafe(), 1);
 
-const res: Option<number> = Option.any(None, None);
+const res: Option<number> = Option.any(Option.none, Option.none);
 assert.equal(res.unsafe(), null);
 ```
 
