@@ -1,8 +1,10 @@
 import { Option } from '../Option';
 
-export type Result<T, E> = Ok<T, E> | Err<T, E>;
+export type Result<T, E> = Ok<T> | Err<E>;
 
 export type AsyncResult<T, E> = Async<T, E>;
+
+type FalsyValue = false | null | undefined | 0 | 0n | '';
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -304,7 +306,7 @@ interface IResultType<Ok, Err> {
   effectErr: (fn: (error: Err) => void) => Result<Ok, Err>;
 }
 
-class Ok<Ok, Err> implements IResultType<Ok, Err> {
+class Ok<Ok> implements IResultType<Ok, never> {
   static readonly type = 'Ok';
   readonly type = Ok.type;
   readonly isOk = true;
@@ -315,27 +317,27 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return this.value;
   }
 
-  okOr<T>(fallback: T): Ok | T {
+  okOr<T>(): Ok | T {
     return this.value;
   }
 
-  errorOr<T>(fallback: T): Err | T {
+  errorOr<T>(fallback: T): T {
     return fallback;
   }
 
-  okOrElse<T>(fn: () => T): Ok | T {
+  okOrElse<T>(): Ok | T {
     return this.value;
   }
 
-  errorOrElse<T>(fn: () => T): Err | T {
+  errorOrElse<T>(fn: () => T): T {
     return fn();
   }
 
-  okOrThrow(fn: (error: Err) => unknown): Ok {
+  okOrThrow(): Ok {
     return this.value;
   }
 
-  errorOrThrow(fn: (value: Ok) => unknown): Err {
+  errorOrThrow(fn: (value: Ok) => unknown): never {
     throw fn(this.value);
   }
 
@@ -343,50 +345,35 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return [this.value, null];
   }
 
-  or<OtherOk, OtherErr>(
-    result: Result<OtherOk, OtherErr>
-  ): Result<Ok | OtherOk, OtherErr> {
-    // @ts-expect-error - this result error will never happen
+  or() {
     return this;
   }
 
-  map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, Err>;
-  map<NewOk>(fn: (ok: Ok) => Promise<NewOk>): Promise<Result<NewOk, Err>>;
-  map<NewOk>(fn: (ok: Ok) => NewOk): MaybePromise<Result<NewOk, Err>> {
+  map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, never>;
+  map<NewOk>(fn: (ok: Ok) => Promise<NewOk>): Promise<Result<NewOk, never>>;
+  map<NewOk>(fn: (ok: Ok) => NewOk): MaybePromise<Result<NewOk, never>> {
     return new Ok(fn(this.value));
   }
 
   flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => Result<NewOk, NewErr>
-  ): Result<NewOk, Err | NewErr>;
+  ): Result<NewOk, NewErr>;
   flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => Promise<Result<NewOk, NewErr>>
-  ): Promise<Result<NewOk, Err | NewErr>>;
+  ): Promise<Result<NewOk, NewErr>>;
   flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => MaybePromise<Result<NewOk, NewErr>>
-  ): MaybePromise<Result<NewOk, Err | NewErr>> {
+  ): MaybePromise<Result<NewOk, NewErr>> {
     return fn(this.value);
   }
 
-  mapErr<NewErr>(fn: (value: Err) => NewErr): Result<Ok, NewErr>;
-  mapErr<NewErr>(
-    fn: (value: Err) => Promise<NewErr>
-  ): Promise<Result<Ok, NewErr>>;
-  mapErr<NewErr>(fn: (value: Err) => NewErr): MaybePromise<Result<Ok, NewErr>> {
-    // @ts-expect-error - no error to map over
+  // @ts-expect-error - not used
+  mapErr() {
     return this;
   }
 
-  flatMapErr<NewOk, NewErr>(
-    fn: (error: Err) => Result<NewOk, NewErr>
-  ): Result<Ok | NewOk, NewErr>;
-  flatMapErr<NewOk, NewErr>(
-    fn: (error: Err) => Promise<Result<NewOk, NewErr>>
-  ): Promise<Result<Ok | NewOk, NewErr>>;
-  flatMapErr<NewOk, NewErr>(
-    fn: (error: Err) => MaybePromise<Result<NewOk, NewErr>>
-  ): MaybePromise<Result<Ok | NewOk, NewErr>> {
-    // @ts-expect-error - no error to map over
+  // @ts-expect-error - not used
+  flatMapErr() {
     return this;
   }
 
@@ -394,21 +381,21 @@ class Ok<Ok, Err> implements IResultType<Ok, Err> {
     return fn(this.value) ? Option.some(this.value) : Option.none;
   }
 
-  toOption(): Option<Ok> {
+  toOption() {
     return Option.some(this.value);
   }
 
-  effect = (fn: (value: Ok) => void): Result<Ok, Err> => {
+  effect = (fn: (value: Ok) => void) => {
     fn(this.value);
     return this;
   };
 
-  effectErr = (): Result<Ok, Err> => {
+  effectErr = () => {
     return this;
   };
 }
 
-class Err<Ok, Err> implements IResultType<Ok, Err> {
+class Err<Err> implements IResultType<never, Err> {
   static readonly type = 'Err';
   readonly type = Err.type;
   readonly isOk = false;
@@ -419,27 +406,27 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
     return this.error;
   }
 
-  okOr<T>(fallback: T): Ok | T {
+  okOr<T>(fallback: T): T {
     return fallback;
   }
 
-  errorOr<T>(fallback: T): Err | T {
+  errorOr<T>(): Err | T {
     return this.error;
   }
 
-  okOrElse<T>(fn: () => T): Ok | T {
+  okOrElse<T>(fn: () => T): T {
     return fn();
   }
 
-  errorOrElse<T>(fn: () => T): Err | T {
+  errorOrElse<T>(): Err | T {
     return this.error;
   }
 
-  okOrThrow(fn: (error: Err) => unknown): Ok {
+  okOrThrow(fn: (error: Err) => unknown): never {
     throw fn(this.error);
   }
 
-  errorOrThrow(fn: (value: Ok) => unknown): Err {
+  errorOrThrow(): Err {
     return this.error;
   }
 
@@ -449,63 +436,55 @@ class Err<Ok, Err> implements IResultType<Ok, Err> {
 
   or<OtherOk, OtherErr>(
     result: Result<OtherOk, OtherErr>
-  ): Result<Ok | OtherOk, OtherErr> {
+  ): Result<OtherOk, OtherErr> {
     return result;
   }
 
-  map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, Err>;
-  map<NewOk>(fn: (ok: Ok) => Promise<NewOk>): Promise<Result<NewOk, Err>>;
-  map<NewOk>(fn: (ok: Ok) => NewOk): MaybePromise<Result<NewOk, Err>> {
-    // @ts-expect-error - no value to map over
+  // @ts-expect-error - not used
+  map() {
     return this;
   }
 
-  flatMap<NewOk, NewErr>(
-    fn: (ok: Ok) => Promise<Result<NewOk, NewErr>>
-  ): Promise<Result<NewOk, Err | NewErr>>;
-  flatMap<NewOk, NewErr>(
-    fn: (ok: Ok) => Result<NewOk, NewErr>
-  ): Result<NewOk, Err | NewErr>;
-  flatMap<NewOk, NewErr>(
-    fn: (ok: Ok) => MaybePromise<Result<NewOk, NewErr>>
-  ): MaybePromise<Result<NewOk, Err | NewErr>> {
-    // @ts-expect-error - no value to map over
+  // @ts-expect-error - not used
+  flatMap() {
     return this;
   }
 
-  mapErr<NewErr>(fn: (value: Err) => NewErr): Result<Ok, NewErr>;
+  mapErr<NewErr>(fn: (value: Err) => NewErr): Result<never, NewErr>;
   mapErr<NewErr>(
     fn: (value: Err) => Promise<NewErr>
-  ): Promise<Result<Ok, NewErr>>;
-  mapErr<NewErr>(fn: (value: Err) => NewErr): MaybePromise<Result<Ok, NewErr>> {
+  ): Promise<Result<never, NewErr>>;
+  mapErr<NewErr>(
+    fn: (value: Err) => NewErr
+  ): MaybePromise<Result<never, NewErr>> {
     return new Err(fn(this.error));
   }
 
   flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => Result<NewOk, NewErr>
-  ): Result<Ok | NewOk, NewErr>;
+  ): Result<NewOk, NewErr>;
   flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => Promise<Result<NewOk, NewErr>>
-  ): Promise<Result<Ok | NewOk, NewErr>>;
+  ): Promise<Result<NewOk, NewErr>>;
   flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => MaybePromise<Result<NewOk, NewErr>>
-  ): MaybePromise<Result<Ok | NewOk, NewErr>> {
+  ): MaybePromise<Result<NewOk, NewErr>> {
     return fn(this.error);
   }
 
-  filter(fn: (value: Ok) => boolean): Option<Ok> {
+  filter() {
     return Option.none;
   }
 
-  toOption(): Option<Ok> {
+  toOption() {
     return Option.none;
   }
 
-  effect = (): Result<Ok, Err> => {
+  effect = () => {
     return this;
   };
 
-  effectErr = (fn: (error: Err) => void): Result<Ok, Err> => {
+  effectErr = (fn: (error: Err) => void) => {
     fn(this.error);
     return this;
   };
@@ -847,7 +826,7 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
       return awaited.flatMap(async (ok) => fn(ok));
     };
 
-    return Result.async(nextPromise());
+    return Result.async(nextPromise() as Promise<Result<NewOk, NewErr>>);
   }
 
   mapErr<NewErr>(fn: (error: Err) => MaybePromise<NewErr>) {
@@ -868,7 +847,7 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
       return awaited.flatMapErr(async (err) => fn(err));
     };
 
-    return Result.async(nextPromise());
+    return Result.async(nextPromise() as Promise<Result<NewOk, NewErr>>);
   }
 
   async toOption() {
@@ -1058,8 +1037,8 @@ function any<Results extends Result<unknown, unknown>[]>(
  * assert(x.isErr === true);
  * ```
  */
-function from<T, E>(value: T, err: E): Result<T, E> {
-  return !value ? Result.err(err) : Result.ok(value);
+function from<T, E>(value: T, err: E): Result<Exclude<T, FalsyValue>, E> {
+  return !value ? Result.err(err) : Result.ok(value as Exclude<T, FalsyValue>);
 }
 
 /**
@@ -1075,8 +1054,10 @@ function from<T, E>(value: T, err: E): Result<T, E> {
  * assert(x.isErr === true);
  * ```
  */
-function fromNullable<T, E>(value: T, err: E): Result<T, E> {
-  return value === null ? Result.err(err) : Result.ok(value);
+function fromNullable<T, E>(value: T, err: E): Result<Exclude<T, null>, E> {
+  return value === null
+    ? Result.err(err)
+    : Result.ok(value as Exclude<T, null>);
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Result } from '../Result';
 
-export type Option<T> = Some<T> | None<T>;
+export type Option<T> = Some<T> | None;
 
 type FalsyValue = false | null | undefined | 0 | 0n | '';
 
@@ -24,7 +24,7 @@ interface IOptionType<Some> {
    * assert.equal(x, null);
    * ```
    */
-  unsafe<Falsy extends FalsyValue>(fallback: Falsy): Some | Falsy; // Will probably be renamed to `unsafe` in the future
+  unsafe<Falsy extends FalsyValue>(fallback: Falsy): Some | Falsy;
 
   /**
    * Returns the contained `Some` value or a provided fallback.
@@ -305,7 +305,7 @@ class Some<Some> implements IOptionType<Some> {
   };
 }
 
-class None<Some> implements IOptionType<Some> {
+class None implements IOptionType<never> {
   static readonly type = 'None';
   readonly type = None.type;
   readonly isSome = false;
@@ -316,7 +316,7 @@ class None<Some> implements IOptionType<Some> {
     return fallback;
   }
 
-  someOr<T>(fallback: T): Some | T {
+  someOr<T>(fallback: T): T {
     return fallback;
   }
 
@@ -324,7 +324,7 @@ class None<Some> implements IOptionType<Some> {
     return null;
   }
 
-  someOrElse<T>(fn: () => T): Some | T {
+  someOrElse<T>(fn: () => T): T {
     return fn();
   }
 
@@ -332,7 +332,7 @@ class None<Some> implements IOptionType<Some> {
     return null;
   }
 
-  someOrThrow(error: unknown): Some {
+  someOrThrow(error: unknown): never {
     throw error;
   }
 
@@ -340,41 +340,33 @@ class None<Some> implements IOptionType<Some> {
     return null;
   }
 
-  or<OtherSome>(option: Option<OtherSome>): Option<Some | OtherSome> {
+  or<OtherSome>(option: Option<OtherSome>): Option<OtherSome> {
     return option;
   }
 
-  map<NewSome>(fn: (some: Some) => NewSome): Option<NewSome>;
-  map<NewSome>(fn: (some: Some) => Promise<NewSome>): Promise<Option<NewSome>>;
-  map<NewSome>(fn: (some: Some) => NewSome): MaybePromise<Option<NewSome>> {
-    // @ts-expect-error - no value to map over
+  // @ts-expect-error - not used
+  map() {
     return this;
   }
 
-  flatMap<NewSome>(
-    fn: (some: Some) => Promise<Option<NewSome>>
-  ): Promise<Option<NewSome>>;
-  flatMap<NewSome>(fn: (some: Some) => Option<NewSome>): Option<NewSome>;
-  flatMap<NewSome>(
-    fn: (some: Some) => MaybePromise<Option<NewSome>>
-  ): MaybePromise<Option<NewSome>> {
-    // @ts-expect-error - no value to map over
+  // @ts-expect-error - not used
+  flatMap() {
     return this;
   }
 
-  filter(fn: (some: Some) => boolean): Option<Some> {
+  filter() {
     return this;
   }
 
-  toResult<Err>(error: Err): Result<Some, Err> {
+  toResult<Err>(error: Err): Result<never, Err> {
     return Result.err(error);
   }
 
-  effect(fn: (value: Some) => void): Option<Some> {
+  effect() {
     return this;
   }
 
-  effectNone = (fn: () => void): Option<Some> => {
+  effectNone = (fn: () => void) => {
     fn();
     return this;
   };
@@ -507,8 +499,8 @@ function any<Options extends Option<unknown>[]>(
  * assert(x.isNone === true);
  * ```
  */
-function from<T>(value: T): Option<T> {
-  return !value ? Option.none : Option.some(value);
+function from<T>(value: T): Option<Exclude<T, FalsyValue>> {
+  return !value ? Option.none : Option.some(value as Exclude<T, FalsyValue>);
 }
 
 /**
@@ -524,8 +516,8 @@ function from<T>(value: T): Option<T> {
  * assert(x.isNone === true);
  * ```
  */
-function fromNullable<T>(value: T): Option<T> {
-  return value === null ? Option.none : Option.some(value);
+function fromNullable<T>(value: T): Option<Exclude<T, null>> {
+  return value === null ? Option.none : Option.some(value as Exclude<T, null>);
 }
 
 export const Option = Object.freeze({
