@@ -278,7 +278,9 @@ describe('Result', () => {
     it('executes a side effect for an Ok result', () => {
       const mayFail1: Result<number, 'error1'> = Result.ok(1);
       const doSomething = jest.fn();
-      mayFail1.effect((v) => doSomething(v));
+      mayFail1.effect((v) => {
+        doSomething(v);
+      });
 
       expect(mayFail1.isOk && mayFail1.value).toBe(1);
       expect(doSomething).toHaveBeenCalledWith(1);
@@ -287,7 +289,9 @@ describe('Result', () => {
     it('does not execute a side effect for an Err result', () => {
       const mayFail1: Result<number, 'error1'> = Result.err('error1');
       const doSomething = jest.fn();
-      mayFail1.effect((v) => doSomething(v));
+      mayFail1.effect((v) => {
+        doSomething(v);
+      });
 
       expect(mayFail1.isErr && mayFail1.error).toBe('error1');
       expect(doSomething).not.toHaveBeenCalled();
@@ -298,7 +302,9 @@ describe('Result', () => {
     it('executes a side effect for an Err result', () => {
       const mayFail1: Result<number, 'error1'> = Result.err('error1');
       const doSomething = jest.fn();
-      mayFail1.effectErr((e) => doSomething(e));
+      mayFail1.effectErr((e) => {
+        doSomething(e);
+      });
 
       expect(mayFail1.isErr && mayFail1.error).toBe('error1');
       expect(doSomething).toHaveBeenCalledWith('error1');
@@ -307,7 +313,9 @@ describe('Result', () => {
     it('does not execute a side effect for an Ok result', () => {
       const mayFail1: Result<number, 'error1'> = Result.ok(1);
       const doSomething = jest.fn();
-      mayFail1.effectErr((e) => doSomething(e));
+      mayFail1.effectErr((e) => {
+        doSomething(e);
+      });
 
       expect(mayFail1.isOk && mayFail1.value).toBe(1);
       expect(doSomething).not.toHaveBeenCalled();
@@ -343,12 +351,12 @@ describe('Result', () => {
 
     it('returns an Err result for from a function', () => {
       const mayFail1: () => number = () => {
-        throw 'error';
+        throw new Error('error');
       };
 
       const result = Result.safe(mayFail1);
 
-      expect(result.isErr && result.error).toBe('error');
+      expect(result.isErr && result.error).toBeInstanceOf(Error);
     });
 
     it('returns an Ok result for from a resolved promise', async () => {
@@ -359,10 +367,12 @@ describe('Result', () => {
     });
 
     it('returns an Err result for from a rejected promise', async () => {
-      const mayFail1: () => Promise<number> = () => Promise.reject('error');
+      const mayFail1: () => Promise<number> = () =>
+        Promise.reject(new Error('error'));
+
       const result = await Result.safe(() => mayFail1());
 
-      expect(result.isErr && result.error).toBe('error');
+      expect(result.isErr && result.error).toBeInstanceOf(Error);
     });
   });
 
@@ -539,9 +549,9 @@ describe('Result', () => {
       it('throws an error for an Err result', async () => {
         const mayFail1: Result<number, 'error1'> = Result.err('error1');
 
-        Result.async(Promise.resolve(mayFail1))
+        await Result.async(Promise.resolve(mayFail1))
           .okOrThrow(() => new Error('error'))
-          .catch((error) => {
+          .catch((error: unknown) => {
             expect(error).toBeInstanceOf(Error);
           });
       });
@@ -551,9 +561,9 @@ describe('Result', () => {
       it('throws an error for an Ok result', async () => {
         const mayFail1: Result<number, 'error1'> = Result.ok(1);
 
-        Result.async(Promise.resolve(mayFail1))
+        await Result.async(Promise.resolve(mayFail1))
           .errorOrThrow(() => new Error('error'))
-          .catch((error) => {
+          .catch((error: unknown) => {
             expect(error).toBeInstanceOf(Error);
           });
       });
@@ -574,7 +584,7 @@ describe('Result', () => {
 
         const result = await Result.async(Promise.resolve(mayFail1))
           .map((value) => value + 1)
-          .map((value) => `value: ${value}`);
+          .map((value) => `value: ${value.toString()}`);
 
         expect(result.isOk && result.value).toEqual('value: 2');
       });

@@ -1,7 +1,7 @@
 {
   "name": "@bmrk/pickle",
   "author": "Enzo Bomark",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Result<Ok, Err> and Option<Some>, implemented for TypeScript.",
   "license": "MIT",
   "main": "./dist/index.js",

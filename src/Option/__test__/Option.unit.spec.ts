@@ -91,7 +91,7 @@ describe('Option', () => {
   describe('someOrThrow', () => {
     it('returns the value for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
-      const option = mayExist1.someOrThrow(new Error('error'));
+      const option = mayExist1.someOrThrow(() => new Error('error'));
 
       expect(option).toBe(1);
     });
@@ -100,7 +100,7 @@ describe('Option', () => {
       const mayExist1: Option<number> = Option.none;
 
       try {
-        mayExist1.someOrThrow(new Error('error'));
+        mayExist1.someOrThrow(() => new Error('error'));
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
@@ -112,7 +112,7 @@ describe('Option', () => {
       const mayExist1: Option<number> = Option.some(1);
 
       try {
-        mayExist1.noneOrThrow(new Error('error'));
+        mayExist1.noneOrThrow(() => new Error('error'));
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
@@ -121,7 +121,7 @@ describe('Option', () => {
     it('returns the null for an None option', () => {
       const mayExist1: Option<number> = Option.none;
 
-      const option = mayExist1.noneOrThrow(new Error('error'));
+      const option = mayExist1.noneOrThrow(() => new Error('error'));
 
       expect(option).toBe(null);
     });
@@ -234,7 +234,9 @@ describe('Option', () => {
     it('executes a side effect for a Some option', () => {
       const mayExist1: Option<number> = Option.some(1);
       const doSomething = jest.fn();
-      mayExist1.effect((v) => doSomething(v));
+      mayExist1.effect((v) => {
+        doSomething(v);
+      });
 
       expect(mayExist1.isSome && mayExist1.value).toBe(1);
       expect(doSomething).toHaveBeenCalledWith(1);
@@ -243,7 +245,9 @@ describe('Option', () => {
     it('does not execute a side effect for a None value', () => {
       const mayExist1: Option<number> = Option.none;
       const doSomething = jest.fn();
-      mayExist1.effect((v) => doSomething(v));
+      mayExist1.effect((v) => {
+        doSomething(v);
+      });
 
       expect(mayExist1.isNone).toBe(true);
       expect(doSomething).not.toHaveBeenCalled();
@@ -254,7 +258,9 @@ describe('Option', () => {
     it('does not execute a side effect for a Some value', () => {
       const mayExist1: Option<number> = Option.some(1);
       const doSomething = jest.fn();
-      mayExist1.effectNone(() => doSomething());
+      mayExist1.effectNone(() => {
+        doSomething();
+      });
 
       expect(mayExist1.isSome && mayExist1.value).toBe(1);
       expect(doSomething).not.toHaveBeenCalled();
@@ -263,7 +269,9 @@ describe('Option', () => {
     it('executes a side effect for a None option', () => {
       const mayExist1: Option<number> = Option.none;
       const doSomething = jest.fn();
-      mayExist1.effectNone(() => doSomething());
+      mayExist1.effectNone(() => {
+        doSomething();
+      });
 
       expect(mayExist1.isNone).toBe(true);
       expect(doSomething).toHaveBeenCalled();
@@ -299,7 +307,7 @@ describe('Option', () => {
 
     it('returns an Err option for from a function', () => {
       const mayFail1: () => number = () => {
-        throw 'error';
+        throw new Error('error');
       };
 
       const option = Option.safe(mayFail1);
@@ -315,7 +323,9 @@ describe('Option', () => {
     });
 
     it('returns an Err option for from a rejected promise', async () => {
-      const mayFail1: () => Promise<number> = () => Promise.reject('error');
+      const mayFail1: () => Promise<number> = () =>
+        Promise.reject(new Error('error'));
+
       const option = await Option.safe(mayFail1);
 
       expect(option.isNone).toBe(true);

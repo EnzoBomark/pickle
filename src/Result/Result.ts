@@ -9,10 +9,12 @@ type FalsyValue = false | null | undefined | 0 | 0n | '';
 type MaybePromise<T> = T | Promise<T>;
 
 type ResultTypes<R> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;
 };
 
 type ResultErrors<R> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [K in keyof R]: R[K] extends Result<any, infer U> ? U : never;
 };
 
@@ -104,7 +106,7 @@ interface IResultType<Ok, Err> {
    * const x = Result.err('foo').okOrThrow((err) => new Error(err)); // throws 'foo'
    * ```
    */
-  okOrThrow(fn: (error: Err) => unknown): Ok;
+  okOrThrow(fn?: (error: Err) => unknown): Ok;
 
   /**
    * Returns the contained `Ok` value or a provided fallback.
@@ -118,7 +120,7 @@ interface IResultType<Ok, Err> {
    * assert.equal(x, 'foo');
    * ```
    */
-  errorOrThrow(fn: (value: Ok) => unknown): Err;
+  errorOrThrow(fn?: (value: Ok) => unknown): Err;
 
   /**
    * Converts the `Result` into a tuple.
@@ -307,184 +309,186 @@ interface IResultType<Ok, Err> {
 }
 
 class Ok<Ok> implements IResultType<Ok, never> {
-  static readonly type = 'Ok';
-  readonly type = Ok.type;
-  readonly isOk = true;
-  readonly isErr = false;
-  constructor(readonly value: Ok) {}
+  private static readonly type = 'Ok';
+  public readonly type = Ok.type;
+  public readonly isOk = true;
+  public readonly isErr = false;
+  public constructor(public readonly value: Ok) {}
 
-  unsafe(): Ok {
+  public unsafe(): Ok {
     return this.value;
   }
 
-  okOr<T>(): Ok | T {
+  public okOr<T>(): Ok | T {
     return this.value;
   }
 
-  errorOr<T>(fallback: T): T {
+  public errorOr<T>(fallback: T): T {
     return fallback;
   }
 
-  okOrElse<T>(): Ok | T {
+  public okOrElse<T>(): Ok | T {
     return this.value;
   }
 
-  errorOrElse<T>(fn: () => T): T {
+  public errorOrElse<T>(fn: () => T): T {
     return fn();
   }
 
-  okOrThrow(): Ok {
+  public okOrThrow(): Ok {
     return this.value;
   }
 
-  errorOrThrow(fn: (value: Ok) => unknown): never {
-    throw fn(this.value);
+  public errorOrThrow(fn?: (value: Ok) => unknown): never {
+    throw fn ? fn(this.value) : this.value;
   }
 
-  tuple(): [Ok, null] {
+  public tuple(): [Ok, null] {
     return [this.value, null];
   }
 
-  or() {
+  public or() {
     return this;
   }
 
-  map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, never>;
-  map<NewOk>(fn: (ok: Ok) => Promise<NewOk>): Promise<Result<NewOk, never>>;
-  map<NewOk>(fn: (ok: Ok) => NewOk): MaybePromise<Result<NewOk, never>> {
+  public map<NewOk>(fn: (ok: Ok) => NewOk): Result<NewOk, never>;
+  public map<NewOk>(
+    fn: (ok: Ok) => Promise<NewOk>
+  ): Promise<Result<NewOk, never>>;
+  public map<NewOk>(fn: (ok: Ok) => NewOk): MaybePromise<Result<NewOk, never>> {
     return new Ok(fn(this.value));
   }
 
-  flatMap<NewOk, NewErr>(
+  public flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => Result<NewOk, NewErr>
   ): Result<NewOk, NewErr>;
-  flatMap<NewOk, NewErr>(
+  public flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => Promise<Result<NewOk, NewErr>>
   ): Promise<Result<NewOk, NewErr>>;
-  flatMap<NewOk, NewErr>(
+  public flatMap<NewOk, NewErr>(
     fn: (ok: Ok) => MaybePromise<Result<NewOk, NewErr>>
   ): MaybePromise<Result<NewOk, NewErr>> {
     return fn(this.value);
   }
 
   // @ts-expect-error - not used
-  mapErr() {
+  public mapErr() {
     return this;
   }
 
   // @ts-expect-error - not used
-  flatMapErr() {
+  public flatMapErr() {
     return this;
   }
 
-  filter(fn: (value: Ok) => boolean): Option<Ok> {
+  public filter(fn: (value: Ok) => boolean): Option<Ok> {
     return fn(this.value) ? Option.some(this.value) : Option.none;
   }
 
-  toOption() {
+  public toOption() {
     return Option.some(this.value);
   }
 
-  effect = (fn: (value: Ok) => void) => {
+  public effect = (fn: (value: Ok) => void) => {
     fn(this.value);
     return this;
   };
 
-  effectErr = () => {
+  public effectErr = () => {
     return this;
   };
 }
 
 class Err<Err> implements IResultType<never, Err> {
-  static readonly type = 'Err';
-  readonly type = Err.type;
-  readonly isOk = false;
-  readonly isErr = true;
-  constructor(readonly error: Err) {}
+  private static readonly type = 'Err';
+  public readonly type = Err.type;
+  public readonly isOk = false;
+  public readonly isErr = true;
+  public constructor(public readonly error: Err) {}
 
-  unsafe(): Err {
+  public unsafe(): Err {
     return this.error;
   }
 
-  okOr<T>(fallback: T): T {
+  public okOr<T>(fallback: T): T {
     return fallback;
   }
 
-  errorOr<T>(): Err | T {
+  public errorOr<T>(): Err | T {
     return this.error;
   }
 
-  okOrElse<T>(fn: () => T): T {
+  public okOrElse<T>(fn: () => T): T {
     return fn();
   }
 
-  errorOrElse<T>(): Err | T {
+  public errorOrElse<T>(): Err | T {
     return this.error;
   }
 
-  okOrThrow(fn: (error: Err) => unknown): never {
-    throw fn(this.error);
+  public okOrThrow(fn?: (error: Err) => unknown): never {
+    throw fn ? fn(this.error) : this.error;
   }
 
-  errorOrThrow(): Err {
+  public errorOrThrow(): Err {
     return this.error;
   }
 
-  tuple(): [null, Err] {
+  public tuple(): [null, Err] {
     return [null, this.error];
   }
 
-  or<OtherOk, OtherErr>(
+  public or<OtherOk, OtherErr>(
     result: Result<OtherOk, OtherErr>
   ): Result<OtherOk, OtherErr> {
     return result;
   }
 
   // @ts-expect-error - not used
-  map() {
+  public map() {
     return this;
   }
 
   // @ts-expect-error - not used
-  flatMap() {
+  public flatMap() {
     return this;
   }
 
-  mapErr<NewErr>(fn: (value: Err) => NewErr): Result<never, NewErr>;
-  mapErr<NewErr>(
+  public mapErr<NewErr>(fn: (value: Err) => NewErr): Result<never, NewErr>;
+  public mapErr<NewErr>(
     fn: (value: Err) => Promise<NewErr>
   ): Promise<Result<never, NewErr>>;
-  mapErr<NewErr>(
+  public mapErr<NewErr>(
     fn: (value: Err) => NewErr
   ): MaybePromise<Result<never, NewErr>> {
     return new Err(fn(this.error));
   }
 
-  flatMapErr<NewOk, NewErr>(
+  public flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => Result<NewOk, NewErr>
   ): Result<NewOk, NewErr>;
-  flatMapErr<NewOk, NewErr>(
+  public flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => Promise<Result<NewOk, NewErr>>
   ): Promise<Result<NewOk, NewErr>>;
-  flatMapErr<NewOk, NewErr>(
+  public flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => MaybePromise<Result<NewOk, NewErr>>
   ): MaybePromise<Result<NewOk, NewErr>> {
     return fn(this.error);
   }
 
-  filter() {
+  public filter() {
     return Option.none;
   }
 
-  toOption() {
+  public toOption() {
     return Option.none;
   }
 
-  effect = () => {
+  public effect = () => {
     return this;
   };
 
-  effectErr = (fn: (error: Err) => void) => {
+  public effectErr = (fn: (error: Err) => void) => {
     fn(this.error);
     return this;
   };
@@ -499,7 +503,7 @@ interface IAsyncResultType<Ok, Err> {
    *   .then((result) => assert.equal(Result.is(x) === true));
    * ```
    */
-  then: (resolve: (result: Result<Ok, Err>) => void) => void;
+  then: (resolve: (result: Result<Ok, Err>) => void) => Promise<void>;
 
   /**
    * Returns the contained `Ok` or `Err` value.
@@ -762,53 +766,54 @@ interface IAsyncResultType<Ok, Err> {
 }
 
 class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
-  constructor(private result: MaybePromise<Result<Ok, Err>>) {}
+  public constructor(private result: MaybePromise<Result<Ok, Err>>) {}
 
-  async then(resolve: (result: Result<Ok, Err>) => void) {
-    resolve(await this.result);
+  public async then(resolve: (result: Result<Ok, Err>) => void) {
+    const awaited = await this.result;
+    resolve(awaited);
   }
 
-  async unsafe() {
+  public async unsafe() {
     const awaited = await this.result;
     return awaited.unsafe();
   }
 
-  async okOr<T>(fallback: T) {
+  public async okOr<T>(fallback: T) {
     const awaited = await this.result;
     return awaited.okOr(fallback);
   }
 
-  async errorOr<T>(fallback: T) {
+  public async errorOr<T>(fallback: T) {
     const awaited = await this.result;
     return awaited.errorOr(fallback);
   }
 
-  async okOrElse<T>(fn: () => T) {
+  public async okOrElse<T>(fn: () => T) {
     const awaited = await this.result;
     return awaited.okOrElse(fn);
   }
 
-  async errorOrElse<T>(fn: () => T) {
+  public async errorOrElse<T>(fn: () => T) {
     const awaited = await this.result;
     return awaited.errorOrElse(fn);
   }
 
-  async okOrThrow(fn: (error: Err) => unknown) {
+  public async okOrThrow(fn: (error: Err) => unknown) {
     const awaited = await this.result;
     return awaited.okOrThrow(fn);
   }
 
-  async errorOrThrow(fn: (value: Ok) => unknown) {
+  public async errorOrThrow(fn: (value: Ok) => unknown) {
     const awaited = await this.result;
     return awaited.errorOrThrow(fn);
   }
 
-  async tuple() {
+  public async tuple() {
     const awaited = await this.result;
     return awaited.tuple();
   }
 
-  map<NewOk>(fn: (value: Ok) => MaybePromise<NewOk>) {
+  public map<NewOk>(fn: (value: Ok) => MaybePromise<NewOk>) {
     const nextPromise = async () => {
       const awaited = await this.result;
       const [promise, error] = awaited.map(async (ok) => fn(ok)).tuple();
@@ -818,7 +823,7 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return Result.async(nextPromise());
   }
 
-  flatMap<NewOk, NewErr>(
+  public flatMap<NewOk, NewErr>(
     fn: (value: Ok) => MaybePromise<Result<NewOk, NewErr>>
   ) {
     const nextPromise = async () => {
@@ -829,7 +834,7 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return Result.async(nextPromise() as Promise<Result<NewOk, NewErr>>);
   }
 
-  mapErr<NewErr>(fn: (error: Err) => MaybePromise<NewErr>) {
+  public mapErr<NewErr>(fn: (error: Err) => MaybePromise<NewErr>) {
     const nextPromise = async () => {
       const awaited = await this.result;
       const [ok, promise] = awaited.mapErr(async (err) => fn(err)).tuple();
@@ -839,7 +844,7 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return Result.async(nextPromise());
   }
 
-  flatMapErr<NewOk, NewErr>(
+  public flatMapErr<NewOk, NewErr>(
     fn: (error: Err) => MaybePromise<Result<NewOk, NewErr>>
   ) {
     const nextPromise = async () => {
@@ -850,18 +855,18 @@ class Async<Ok, Err> implements IAsyncResultType<Ok, Err> {
     return Result.async(nextPromise() as Promise<Result<NewOk, NewErr>>);
   }
 
-  async toOption() {
+  public async toOption() {
     const awaited = await this.result;
     return awaited.toOption();
   }
 
-  effect(fn: (value: Ok) => void) {
-    Promise.resolve(this.result).then((awaited) => awaited.effect(fn));
+  public effect(fn: (value: Ok) => void) {
+    void Promise.resolve(this.result).then((awaited) => awaited.effect(fn));
     return this;
   }
 
-  effectErr(fn: (error: Err) => void) {
-    Promise.resolve(this.result).then((awaited) => awaited.effectErr(fn));
+  public effectErr(fn: (error: Err) => void) {
+    void Promise.resolve(this.result).then((awaited) => awaited.effectErr(fn));
     return this;
   }
 }
@@ -1081,4 +1086,4 @@ export const Result = Object.freeze({
   async,
 });
 
-export { ok, err };
+export { err, ok };

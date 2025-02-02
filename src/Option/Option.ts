@@ -90,29 +90,29 @@ interface IOptionType<Some> {
    * Returns the contained `Some` value or throws an error.
    *
    * ```typescript
-   * const x = Option.some('foo').someOrThrow(new Error('no value'));
+   * const x = Option.some('foo').someOrThrow(() => new Error('no value'));
    * assert.equal(x, 'foo');
    * ```
    *
    * ```typescript
-   * Option.none.someOrThrow(new Error('no value')) // throws Error('no value')
+   * Option.none.someOrThrow(new Error(() => 'no value')) // throws Error('no value')
    * ```
    */
-  someOrThrow(error: unknown): Some;
+  someOrThrow(fn: () => unknown): Some;
 
   /**
-   * Returns the contained `Some` value or throws an error.
+   * Returns the contained `None` value or throws an error.
    *
    * ```typescript
-   * Option.none.noneOrThrow(new Error('no value')) // throws Error('no value')
+   * const x = Option.none.noneOrThrow(() => new Error('some value'));
+   * assert.equal(x, null);
    * ```
    *
    * ```typescript
-   * const x = Option.some('foo').noneOrThrow(new Error('no value'));
-   * assert.equal(x, 'foo');
+   * Option.some('foo').noneOrThrow(new Error('some value')) // throws Error('some value')
    * ```
    */
-  noneOrThrow(error: unknown): null;
+  noneOrThrow(fn?: (some: Some) => unknown): null;
 
   /**
    * Returns the contained `Some` value or the provided `Option`.
@@ -233,140 +233,143 @@ interface IOptionType<Some> {
 }
 
 class Some<Some> implements IOptionType<Some> {
-  static readonly type = 'Some';
-  readonly type = Some.type;
-  readonly isSome = true;
-  readonly isNone = false;
-  constructor(readonly value: Some) {}
+  private static readonly type = 'Some';
+  public readonly type = Some.type;
+  public readonly isSome = true;
+  public readonly isNone = false;
+  public constructor(public readonly value: Some) {}
 
-  unsafe<Falsy extends FalsyValue>(): Some {
+  public unsafe(): Some {
     return this.value;
   }
 
-  someOr<T>(fallback: T): Some | T {
+  public someOr<T>(): Some | T {
     return this.value;
   }
 
-  noneOr<T>(fallback: T): null | T {
+  public noneOr<T>(fallback: T): null | T {
     return fallback;
   }
 
-  someOrElse<T>(fn: () => T): Some | T {
+  public someOrElse<T>(): Some | T {
     return this.value;
   }
 
-  noneOrElse<T>(fn: () => T): null | T {
+  public noneOrElse<T>(fn: () => T): null | T {
     return fn();
   }
 
-  someOrThrow(error: unknown): Some {
+  public someOrThrow(): Some {
     return this.value;
   }
 
-  noneOrThrow(error: unknown): null {
-    throw error;
+  public noneOrThrow(fn?: (some: Some) => unknown): null {
+    throw fn ? fn(this.value) : this.value;
   }
 
-  or<OtherSome>(option: Option<OtherSome>): Option<Some | OtherSome> {
+  public or<OtherSome>(): Option<Some | OtherSome> {
     return this;
   }
 
-  map<NewSome>(fn: (some: Some) => NewSome): Option<NewSome>;
-  map<NewSome>(fn: (some: Some) => Promise<NewSome>): Promise<Option<NewSome>>;
-  map<NewSome>(fn: (some: Some) => NewSome): MaybePromise<Option<NewSome>> {
+  public map<NewSome>(fn: (some: Some) => NewSome): Option<NewSome>;
+  public map<NewSome>(
+    fn: (some: Some) => Promise<NewSome>
+  ): Promise<Option<NewSome>>;
+  public map<NewSome>(
+    fn: (some: Some) => NewSome
+  ): MaybePromise<Option<NewSome>> {
     return new Some(fn(this.value));
   }
 
-  flatMap<NewSome>(fn: (some: Some) => Option<NewSome>): Option<NewSome>;
-  flatMap<NewSome>(
+  public flatMap<NewSome>(fn: (some: Some) => Option<NewSome>): Option<NewSome>;
+  public flatMap<NewSome>(
     fn: (some: Some) => Promise<Option<NewSome>>
   ): Promise<Option<NewSome>>;
-  flatMap<NewSome>(
+  public flatMap<NewSome>(
     fn: (some: Some) => MaybePromise<Option<NewSome>>
   ): MaybePromise<Option<NewSome>> {
     return fn(this.value);
   }
 
-  filter(fn: (some: Some) => boolean): Option<Some> {
+  public filter(fn: (some: Some) => boolean): Option<Some> {
     return fn(this.value) ? this : Option.none;
   }
 
-  toResult<Err>(error: Err): Result<Some, Err> {
+  public toResult<Err>(): Result<Some, Err> {
     return Result.ok(this.value);
   }
 
-  effect(fn: (value: Some) => void): Option<Some> {
+  public effect(fn: (value: Some) => void): Option<Some> {
     fn(this.value);
     return this;
   }
 
-  effectNone = (): Option<Some> => {
+  public effectNone = (): Option<Some> => {
     return this;
   };
 }
 
 class None implements IOptionType<never> {
-  static readonly type = 'None';
-  readonly type = None.type;
-  readonly isSome = false;
-  readonly isNone = true;
-  constructor() {}
+  private static readonly type = 'None';
+  public readonly type = None.type;
+  public readonly isSome = false;
+  public readonly isNone = true;
 
-  unsafe<T extends FalsyValue>(fallback = null as T): T {
+  public unsafe<T extends FalsyValue>(fallback = null as T): T {
     return fallback;
   }
 
-  someOr<T>(fallback: T): T {
+  public someOr<T>(fallback: T): T {
     return fallback;
   }
 
-  noneOr<T>(fallback: T): null | T {
+  public noneOr<T>(): null | T {
     return null;
   }
 
-  someOrElse<T>(fn: () => T): T {
+  public someOrElse<T>(fn: () => T): T {
     return fn();
   }
 
-  noneOrElse<T>(fn: () => T): null | T {
+  public noneOrElse<T>(): null | T {
     return null;
   }
 
-  someOrThrow(error: unknown): never {
-    throw error;
+  public someOrThrow(fn: () => unknown): never {
+    throw fn();
   }
 
-  noneOrThrow(error: unknown): null {
+  public noneOrThrow(): null {
     return null;
   }
 
-  or<OtherSome>(option: Option<OtherSome>): Option<OtherSome> {
+  public or<OtherSome>(option: Option<OtherSome>): Option<OtherSome> {
     return option;
   }
 
   // @ts-expect-error - not used
-  map() {
+  public map() {
     return this;
   }
 
   // @ts-expect-error - not used
-  flatMap() {
+  public flatMap() {
     return this;
   }
 
-  filter() {
+  public filter() {
     return this;
   }
 
-  toResult<Err>(error: Err): Result<never, Err> {
+  public toResult<Err>(error: Err): Result<never, Err> {
     return Result.err(error);
   }
 
-  effect() {
+  public effect() {
     return this;
   }
 
-  effectNone = (fn: () => void) => {
+  public effectNone = (fn: () => void) => {
     fn();
     return this;
   };
@@ -434,6 +437,7 @@ function safe<Some>(fn: () => MaybePromise<Some>): MaybePromise<Option<Some>> {
     }
 
     return some(result);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return none;
   }
@@ -483,7 +487,7 @@ function any<Options extends Option<unknown>[]>(
     }
   }
 
-  return Option.none as Option<never>;
+  return Option.none;
 }
 
 /**
@@ -531,4 +535,4 @@ export const Option = Object.freeze({
   fromNullable,
 });
 
-export { some, none };
+export { none, some };

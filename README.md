@@ -1,5 +1,7 @@
 # Result and Option Utilities for TypeScript
 
+⚠️ This package is not production-ready yet, and the API is subject to change. If you want to use it, please download the source code and include it in your project. ⚠️
+
 The `Result` and `Option` utilities are designed to improve error handling and value management in TypeScript by providing a more functional approach. These utilities help you avoid common pitfalls associated with exceptions and null/undefined values.
 
 ## Purpose
